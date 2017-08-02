@@ -1,0 +1,37 @@
+TODO:
+-----
+
+One binary only:
+-- parameter read in
+   (a) command line args
+   (b) ini files
+-- what to pass?
+-- need
+    write out frequency, step size
+
+Just chain generation w/o MKL + separate  utility for EV measurements
+
+Allowing to switch between DP/SP (using macros for compile time decision??)
+
+Configuration I/O:
+-- restart
+-- special file format?
+-- EVs within configs?
+-- need to save:
+    N, P, Q, start(H/C)/restart, RNG state, g2, g4
+
+Always write out action with config
+
+Hot start in range / NO max element
+
+Fixed RNG seed
+
+Dirac stencil & Arnoldi
+
+
+PROGRESSING:
+------------
+
+
+DONE:
+-----
