@@ -6,7 +6,6 @@
 #include <inttypes.h>
 #include <sys/types.h>
 #include <sys/time.h>
-#include "mkl_lapacke.h"
 #include "MonteCarlo.h"
 #include "Random.h"
 #include "Actions.h"
@@ -24,11 +23,11 @@ double cclock() {
 }
 
 // Print the Matrix (for debugging)
-void printM(const int L, MKL_Complex8 * M) {
+void printM(const int L, float complex * M) {
   for(int i = 0; i < L; i++) {
     for(int j = 0; j < L; j++)
-      if(M[i*L+j].imag>=0) printf( " %.2f + %.2fi\t ", M[i*L+j].real, M[i*L+j].imag );
-      else                 printf( " %.2f - %.2fi\t ", M[i*L+j].real, -M[i*L+j].imag );
+      if( cimag(M[i*L+j])>=0) printf( " %.2f + %.2fi\t ", creal( M[i*L+j] ),  cimag( M[i*L+j] ) );
+      else                    printf( " %.2f - %.2fi\t ", creal( M[i*L+j] ), -cimag( M[i*L+j] ) );
     printf("\n");
   }
 }
@@ -47,15 +46,14 @@ float delta_approx(float x) {
 }
 
 // Erase the content of a complex square matrix with side length l
-void nullify(const int l, MKL_Complex8 * m) {
+void nullify(const int l, float complex * m) {
   for(int i=0;i<l*l;++i) {
-    m[i].real = 0.;
-    m[i].imag = 0.;
+    m[i] = 0.0 + 0.0 * I;
   }
 }
 
 // Given a (NxN) matrix m compute {m,.}
-void Arrange_Anticommutator(MKL_Complex8 * m, MKL_Complex8 * acomm)
+void Arrange_Anticommutator(float complex * m, float complex * acomm)
 {
   nullify(SWEEP, acomm);
 
@@ -63,8 +61,7 @@ void Arrange_Anticommutator(MKL_Complex8 * m, MKL_Complex8 * acomm)
   for(int i=0;i<N;++i) {
     for(int j=0;j<N;++j) {
       for(int k=0;k<N;++k) {
-        acomm[(i*SWEEP+j)*N+k*(SWEEP+1)].real += m[i*N+j].real;
-        acomm[(i*SWEEP+j)*N+k*(SWEEP+1)].imag += m[i*N+j].imag;
+        acomm[(i*SWEEP+j)*N+k*(SWEEP+1)] += m[i*N+j];
       }
     }
   }
@@ -72,8 +69,7 @@ void Arrange_Anticommutator(MKL_Complex8 * m, MKL_Complex8 * acomm)
   for(int k=0;k<N;++k) {
     for(int i=0;i<N;++i) {
       for(int j=0;j<N;++j) {
-        acomm[(j*SWEEP+i)+k*N*(SWEEP+1)].real += m[i*N+j].real;
-        acomm[(j*SWEEP+i)+k*N*(SWEEP+1)].imag += m[i*N+j].imag;
+        acomm[(j*SWEEP+i)+k*N*(SWEEP+1)] += m[i*N+j];
       }
     }
   }
@@ -81,7 +77,7 @@ void Arrange_Anticommutator(MKL_Complex8 * m, MKL_Complex8 * acomm)
 
 
 // Given a (NxN) matrix m compute [m,.]
-void Arrange_Commutator(MKL_Complex8 * m, MKL_Complex8 * comm)
+void Arrange_Commutator(float complex * m, float complex * comm)
 {
   nullify(SWEEP, comm);
 
@@ -89,8 +85,7 @@ void Arrange_Commutator(MKL_Complex8 * m, MKL_Complex8 * comm)
   for(int i=0;i<N;++i) {
     for(int j=0;j<N;++j) {
       for(int k=0;k<N;++k) {
-        comm[(i*SWEEP+j)*N+k*(SWEEP+1)].real += m[i*N+j].real;
-        comm[(i*SWEEP+j)*N+k*(SWEEP+1)].imag += m[i*N+j].imag;
+        comm[(i*SWEEP+j)*N+k*(SWEEP+1)] += m[i*N+j];
       }
     }
   }
@@ -98,8 +93,7 @@ void Arrange_Commutator(MKL_Complex8 * m, MKL_Complex8 * comm)
   for(int k=0;k<N;++k) {
     for(int i=0;i<N;++i) {
       for(int j=0;j<N;++j) {
-        comm[(j*SWEEP+i)+k*N*(SWEEP+1)].real -= m[i*N+j].real;
-        comm[(j*SWEEP+i)+k*N*(SWEEP+1)].imag -= m[i*N+j].imag;
+        comm[(j*SWEEP+i)+k*N*(SWEEP+1)] -= m[i*N+j];
       }
     }
   }
@@ -107,7 +101,7 @@ void Arrange_Commutator(MKL_Complex8 * m, MKL_Complex8 * comm)
 
 
 // Arrange Matrix D (kn^2 x kn^2) from NUM_H Matrices H and NUM_L Matrices L of type (P,Q)
-void Arrange_Dirac_Matrix(float complex *gamma_passed, MKL_Complex8 *Matrices, MKL_Complex8 *Matrix_Operators, MKL_Complex8 *Dirac, int NUM_H, int NUM_L)
+void Arrange_Dirac_Matrix(float complex *gamma_passed, float complex *Matrices, float complex *Matrix_Operators, float complex *Dirac, int NUM_H, int NUM_L)
 {
 
   /* Cast gammas to use old code */
@@ -145,29 +139,25 @@ void Arrange_Dirac_Matrix(float complex *gamma_passed, MKL_Complex8 *Matrices, M
         } else if (gamma[n*K*K+II*K+JJ]==1) {
             for(int i=0;i<SWEEP;++i) { /* Rows */
               for(int j=0;j<SWEEP;++j) { /* Columns */
-                Dirac[i*K*SWEEP+j+(II*K*SWEEP*SWEEP+JJ*SWEEP)].real += Matrix_Operators[i*SWEEP+j+offset].real;
-                Dirac[i*K*SWEEP+j+(II*K*SWEEP*SWEEP+JJ*SWEEP)].imag += Matrix_Operators[i*SWEEP+j+offset].imag;
+                Dirac[i*K*SWEEP+j+(II*K*SWEEP*SWEEP+JJ*SWEEP)] += Matrix_Operators[i*SWEEP+j+offset];
               }
             }
         } else if (gamma[n*K*K+II*K+JJ]==-1) {
             for(int i=0;i<SWEEP;++i) {
               for(int j=0;j<SWEEP;++j) {
-                Dirac[i*K*SWEEP+j+(II*K*SWEEP*SWEEP+JJ*SWEEP)].real -= Matrix_Operators[i*SWEEP+j+offset].real;
-                Dirac[i*K*SWEEP+j+(II*K*SWEEP*SWEEP+JJ*SWEEP)].imag -= Matrix_Operators[i*SWEEP+j+offset].imag;
+                Dirac[i*K*SWEEP+j+(II*K*SWEEP*SWEEP+JJ*SWEEP)] -= Matrix_Operators[i*SWEEP+j+offset];
               }
             }
         } else if (gamma[n*K*K+II*K+JJ]==2) {
             for(int i=0;i<SWEEP;++i) {
               for(int j=0;j<SWEEP;++j) {
-                Dirac[i*K*SWEEP+j+(II*K*SWEEP*SWEEP+JJ*SWEEP)].real -= Matrix_Operators[i*SWEEP+j+offset].imag;
-                Dirac[i*K*SWEEP+j+(II*K*SWEEP*SWEEP+JJ*SWEEP)].imag += Matrix_Operators[i*SWEEP+j+offset].real;
+                Dirac[i*K*SWEEP+j+(II*K*SWEEP*SWEEP+JJ*SWEEP)] += I * Matrix_Operators[i*SWEEP+j+offset];
               }
             }
         } else if (gamma[n*K*K+II*K+JJ]==-2) {
             for(int i=0;i<SWEEP;++i) {
               for(int j=0;j<SWEEP;++j) {
-                Dirac[i*K*SWEEP+j+(II*K*SWEEP*SWEEP+JJ*SWEEP)].real += Matrix_Operators[i*SWEEP+j+offset].imag;
-                Dirac[i*K*SWEEP+j+(II*K*SWEEP*SWEEP+JJ*SWEEP)].imag -= Matrix_Operators[i*SWEEP+j+offset].real;
+                Dirac[i*K*SWEEP+j+(II*K*SWEEP*SWEEP+JJ*SWEEP)] -= I * Matrix_Operators[i*SWEEP+j+offset];
               }
             }
         } /* End II loop */
@@ -175,7 +165,7 @@ void Arrange_Dirac_Matrix(float complex *gamma_passed, MKL_Complex8 *Matrices, M
     } /* End loop over Gamma Matrix Elements */
   } /* End loop over Matrices */
 
-  
+
   /* COPY [L,.]'s */
   for(int n=0;n<NUM_L;++n) { /* Matrices L */
     offset = n*SWEEP*SWEEP+NUM_H*SWEEP*SWEEP;
@@ -188,29 +178,25 @@ void Arrange_Dirac_Matrix(float complex *gamma_passed, MKL_Complex8 *Matrices, M
         } else if (gamma[off_gamma+n*K*K+II*K+JJ]==2) {
             for(int i=0;i<SWEEP;++i) { /* Rows */
               for(int j=0;j<SWEEP;++j) { /* Columns */
-                Dirac[i*K*SWEEP+j+(II*K*SWEEP*SWEEP+JJ*SWEEP)].real += Matrix_Operators[i*SWEEP+j+offset].real;
-                Dirac[i*K*SWEEP+j+(II*K*SWEEP*SWEEP+JJ*SWEEP)].imag += Matrix_Operators[i*SWEEP+j+offset].imag;
+                Dirac[i*K*SWEEP+j+(II*K*SWEEP*SWEEP+JJ*SWEEP)] += Matrix_Operators[i*SWEEP+j+offset];
               }
             }
         } else if (gamma[off_gamma+n*K*K+II*K+JJ]==-2) {
             for(int i=0;i<SWEEP;++i) {
               for(int j=0;j<SWEEP;++j) {
-                Dirac[i*K*SWEEP+j+(II*K*SWEEP*SWEEP+JJ*SWEEP)].real -= Matrix_Operators[i*SWEEP+j+offset].real;
-                Dirac[i*K*SWEEP+j+(II*K*SWEEP*SWEEP+JJ*SWEEP)].imag -= Matrix_Operators[i*SWEEP+j+offset].imag;
+                Dirac[i*K*SWEEP+j+(II*K*SWEEP*SWEEP+JJ*SWEEP)] -= Matrix_Operators[i*SWEEP+j+offset];
               }
             }
         } else if (gamma[off_gamma+n*K*K+II*K+JJ]==-1) {
             for(int i=0;i<SWEEP;++i) {
               for(int j=0;j<SWEEP;++j) {
-                Dirac[i*K*SWEEP+j+(II*K*SWEEP*SWEEP+JJ*SWEEP)].real -= Matrix_Operators[i*SWEEP+j+offset].imag;
-                Dirac[i*K*SWEEP+j+(II*K*SWEEP*SWEEP+JJ*SWEEP)].imag += Matrix_Operators[i*SWEEP+j+offset].real;
+                Dirac[i*K*SWEEP+j+(II*K*SWEEP*SWEEP+JJ*SWEEP)] += I * Matrix_Operators[i*SWEEP+j+offset];
               }
             }
         } else if (gamma[off_gamma+n*K*K+II*K+JJ]==1) {
             for(int i=0;i<SWEEP;++i) {
               for(int j=0;j<SWEEP;++j) {
-                Dirac[i*K*SWEEP+j+(II*K*SWEEP*SWEEP+JJ*SWEEP)].real += Matrix_Operators[i*SWEEP+j+offset].imag;
-                Dirac[i*K*SWEEP+j+(II*K*SWEEP*SWEEP+JJ*SWEEP)].imag -= Matrix_Operators[i*SWEEP+j+offset].real;
+                Dirac[i*K*SWEEP+j+(II*K*SWEEP*SWEEP+JJ*SWEEP)] -= I * Matrix_Operators[i*SWEEP+j+offset];
               }
             }
         } /* End II loop */
@@ -224,11 +210,11 @@ void Arrange_Dirac_Matrix(float complex *gamma_passed, MKL_Complex8 *Matrices, M
 
 
 // Initialise all Matrices, their Eigenvalues and the action
-void Matrices_Initialisation(struct pcg32_random_t *rng, MKL_Complex8 *Matrices, float *action, int NUM_H, int NUM_L)
+void Matrices_Initialisation(struct pcg32_random_t *rng, float complex *Matrices, float *action, int NUM_H, int NUM_L)
 {
-  /* Set zero-temperature initial state for all *
-   * matrices and caluclate initial action      */
-   
+  /* Set high-temperature initial state for all *
+   * matrices and calculate initial action      */
+
   int itimesN;
   int Nplus1 = N+1;
   int offset;
@@ -236,14 +222,12 @@ void Matrices_Initialisation(struct pcg32_random_t *rng, MKL_Complex8 *Matrices,
   for (int n=0;n<NUM_M;++n) {
     offset = n*SWEEP;
     for (int i=0;i<N;++i) {
-      Matrices[i*Nplus1+offset].real = MAX_ELEMENT * (pcg32_boundedrand_r(&rng[n],2)?-1:1) * ldexp(pcg32_random_r(&rng[n]),-32);
-      Matrices[i*Nplus1+offset].imag = 0.0f;
+      Matrices[i*Nplus1+offset] = MAX_ELEMENT * (pcg32_boundedrand_r(&rng[n],2)?-1:1) * ldexp(pcg32_random_r(&rng[n]),-32) + 0.0 * I;
       itimesN = i*N;
       for (int j=i+1;j<N;j++) {
-        Matrices[itimesN+j+offset].real = MAX_ELEMENT * (pcg32_boundedrand_r(&rng[n],2)?-1:1)*ldexp(pcg32_random_r(&rng[n]),-32);
-        Matrices[itimesN+j+offset].imag = MAX_ELEMENT * (pcg32_boundedrand_r(&rng[n],2)?-1:1)*ldexp(pcg32_random_r(&rng[n]),-32);
-        Matrices[j*N+i+offset].real =  Matrices[itimesN+j+offset].real;
-        Matrices[j*N+i+offset].imag = -Matrices[itimesN+j+offset].imag; /* This is hermitian! */
+        Matrices[itimesN+j+offset] = MAX_ELEMENT * (pcg32_boundedrand_r(&rng[n],2)?-1:1) * ldexp(pcg32_random_r(&rng[n]),-32)
+                                   + I * MAX_ELEMENT * (pcg32_boundedrand_r(&rng[n],2)?-1:1) * ldexp(pcg32_random_r(&rng[n]),-32);
+        Matrices[j*N+i+offset]     =  conj( Matrices[itimesN+j+offset] ); /* This is hermitian! */
       }
     }
   }
@@ -254,18 +238,14 @@ void Matrices_Initialisation(struct pcg32_random_t *rng, MKL_Complex8 *Matrices,
 
 
 // Creates a new Markov chain element
-void Get_Next_MCMC_Element(struct pcg32_random_t *rng, MKL_Complex8 *Matrices, float *action,
-                           int *sigmaAB, int **sigmaABCD, int NUM_H, int NUM_L, int *acc) 
+void Get_Next_MCMC_Element(struct pcg32_random_t *rng, float complex *Matrices, float *action,
+                           int *sigmaAB, int **sigmaABCD, int NUM_H, int NUM_L, int *acc)
 {
   int pos_x, pos_y;
   int pos_upper, pos_lower;
   float p;                    // Random float for accepting MC elemement
-  MKL_Complex8 temp;          // To save random value that is changed
+  float complex temp;         // To save random value that is changed
   float delta_action;
-
-  int itimesN;
-  int Nplus1 = N+1;
-  int offset;
 
   /* For each Matrix change a value in the upper triangle randomly *
    * calculate the the change of the action and finally decide if  *
@@ -273,7 +253,7 @@ void Get_Next_MCMC_Element(struct pcg32_random_t *rng, MKL_Complex8 *Matrices, f
   for(int n=0;n<NUM_M;++n)
   {
     /* Set the offset to write to the right matrix */
-    offset = n*SWEEP;
+    int offset = n * SWEEP;
 
     /* Calculate random float in [0,1) for Monte Carlo Move Decision */
     p = ldexp(pcg32_random_r(&rng[n]),-32);
@@ -281,15 +261,18 @@ void Get_Next_MCMC_Element(struct pcg32_random_t *rng, MKL_Complex8 *Matrices, f
     /* Calculate two random integers and generate position in upper and lower half */
     pos_x = pcg32_boundedrand_r(&rng[n],N);
     pos_y = pcg32_boundedrand_r(&rng[n],N);
-    pos_upper = pos_x<=pos_y ? pos_x*N+pos_y : pos_y*N+pos_x;
-    pos_lower = pos_x>pos_y ? pos_x*N+pos_y : pos_y*N+pos_x;
+    pos_upper = pos_x <= pos_y ? pos_x * N+pos_y : pos_y * N+pos_x;
+    pos_lower = pos_x >  pos_y ? pos_x * N+pos_y : pos_y * N+pos_x;
 
-    temp.real = STEP_SIZE*(pcg32_boundedrand_r(&rng[n],2)?-1:1)*ldexp(pcg32_random_r(&rng[n]),-32);
-    temp.imag = STEP_SIZE*(pcg32_boundedrand_r(&rng[n],2)?-1:1)*ldexp(pcg32_random_r(&rng[n]),-32);
-    temp.real+= Matrices[pos_upper+offset].real;
-    temp.imag+= Matrices[pos_upper+offset].imag;
-    if(temp.real>MAX_ELEMENT || temp.real<-MAX_ELEMENT) continue;
-    if(temp.imag>MAX_ELEMENT || temp.imag<-MAX_ELEMENT) continue;
+    if(pos_x != pos_y) {
+      temp  = STEP_SIZE * (pcg32_boundedrand_r(&rng[n],2)?-1:1)*ldexp(pcg32_random_r(&rng[n]),-32)
+        + I * STEP_SIZE * (pcg32_boundedrand_r(&rng[n],2)?-1:1)*ldexp(pcg32_random_r(&rng[n]),-32);
+    } else {
+      temp  = STEP_SIZE * (pcg32_boundedrand_r(&rng[n],2)?-1:1)*ldexp(pcg32_random_r(&rng[n]),-32) + 0.0 * I;
+    }
+    temp += Matrices[pos_upper+offset];
+    if( creal( temp ) > MAX_ELEMENT || creal( temp ) < -MAX_ELEMENT ) continue;
+    if( cimag( temp ) > MAX_ELEMENT || cimag( temp ) < -MAX_ELEMENT ) continue;
 
     //delta_action = delta_action_traceD2(Matrices, n, temp, pos_x, pos_y, NUM_H, NUM_L);
     delta_action  = G2 * delta_action_traceD2(Matrices, n, temp, pos_x, pos_y, NUM_H, NUM_L);
@@ -297,16 +280,14 @@ void Get_Next_MCMC_Element(struct pcg32_random_t *rng, MKL_Complex8 *Matrices, f
 
     /* Finally test if new action is smaller or except randomly if exp supressed, *
      * if yes write new element in upper and lower half and copy new eigenvalues  */
-    if(delta_action<=0 || expf(-delta_action)>p) {
+    if( delta_action<=0 || expf(-delta_action) > p ) {
       *acc += 1;
       *action += delta_action;
       if(pos_x != pos_y) {
-        Matrices[pos_upper+offset].real = temp.real;
-        Matrices[pos_upper+offset].imag = temp.imag;
-        Matrices[pos_lower+offset].real = temp.real;
-        Matrices[pos_lower+offset].imag = -temp.imag;
+        Matrices[pos_upper+offset] = temp;
+        Matrices[pos_lower+offset] = conj(temp);
       } else {
-        Matrices[pos_upper+offset].real = temp.real;
+        Matrices[pos_upper+offset] = temp;
       }
     }
   }
@@ -314,18 +295,18 @@ void Get_Next_MCMC_Element(struct pcg32_random_t *rng, MKL_Complex8 *Matrices, f
 }
 
 
-void Measure_Eigenvalues_Dirac(float complex *Gamma_Matrices, MKL_Complex8 *Matrices,
-		MKL_Complex8 *Matrix_Operators, MKL_Complex8 *Dirac,
-		float *evs_D, float *evs_D_avrg, float *evs_D_avrg2, int NUM_H, int NUM_L)
-{
-  Arrange_Dirac_Matrix(Gamma_Matrices,Matrices,Matrix_Operators,Dirac,NUM_H,NUM_L);
-  LAPACKE_cheev(LAPACK_ROW_MAJOR,'N','U',K*SWEEP,Dirac,K*SWEEP,evs_D);
+// void Measure_Eigenvalues_Dirac(float complex *Gamma_Matrices, float complex *Matrices,
+// 		float complex *Matrix_Operators, float complex *Dirac,
+// 		float *evs_D, float *evs_D_avrg, float *evs_D_avrg2, int NUM_H, int NUM_L)
+// {
+//   Arrange_Dirac_Matrix(Gamma_Matrices,Matrices,Matrix_Operators,Dirac,NUM_H,NUM_L);
+//   LAPACKE_cheev(LAPACK_ROW_MAJOR,'N','U',K*SWEEP,Dirac,K*SWEEP,evs_D);
 
-  for (int i=0;i<K*SWEEP;i++) {
-    evs_D_avrg[i]  += evs_D[i];
-    evs_D_avrg2[i] += evs_D[i]*evs_D[i];
-  }
-}
+//   for (int i=0;i<K*SWEEP;i++) {
+//     evs_D_avrg[i]  += evs_D[i];
+//     evs_D_avrg2[i] += evs_D[i]*evs_D[i];
+//   }
+// }
 
 
 void Measure_Eigenvaluedistribution_Dirac(float *support_points, float *evs_D, float *dist_evs_D_avrg)
@@ -335,19 +316,19 @@ void Measure_Eigenvaluedistribution_Dirac(float *support_points, float *evs_D, f
       dist_evs_D_avrg[i] += delta_approx(support_points[i]-evs_D[j]);
 }
 
-void Measure_Orderparameter_Frac(MKL_Complex8 *Matrices, double *frac,
+void Measure_Orderparameter_Frac(float complex *Matrices, double *frac,
                                  double *frac_squared, int NUM_H)
 {
-  double numerator = 0.0;
+  double numerator   = 0.0;
   double denominator = 0.0;
 
-  double *traceH = (double*) calloc(NUM_H,sizeof(double));
-  double *traceH2 = (double*) calloc(NUM_H,sizeof(double));
+  double *traceH  = (double*) calloc( NUM_H, sizeof(double) );
+  double *traceH2 = (double*) calloc( NUM_H, sizeof(double) );
 
   /* Calculate Tr H_i for all i */
   for(int num=0;num<NUM_H;++num) {
     int offset = num*SWEEP;
-    for(int i=0;i<N;++i) traceH[num] += (double) Matrices[i*(N+1)+offset].real;
+    for(int i=0;i<N;++i) traceH[num] += (double) creal( Matrices[i*(N+1)+offset] );
   }
 
 
@@ -356,20 +337,20 @@ void Measure_Orderparameter_Frac(MKL_Complex8 *Matrices, double *frac,
     int offset = num*SWEEP;
     for(int i=0;i<N;++i) {
       for(int j=0;j<N;++j) {
-        traceH2[num] += (double) Matrices[i*N+j+offset].real*Matrices[j*N+i+offset].real;
-        traceH2[num] -= (double) Matrices[i*N+j+offset].imag*Matrices[j*N+i+offset].imag;
+        traceH2[num] += (double) creal( Matrices[i*N+j+offset] ) * creal( Matrices[j*N+i+offset] );
+        traceH2[num] -= (double) cimag( Matrices[i*N+j+offset] ) * cimag( Matrices[j*N+i+offset] );
       }
     }
   }
 
   /* Calculate the numerator and denominator */
   for(int num=0;num<NUM_H;++num) {
-    numerator += traceH[num]*traceH[num];
+    numerator   += traceH[num] * traceH[num];
     denominator += traceH2[num];
   }
 
-  *frac         += numerator/denominator;
-  *frac_squared += numerator*numerator/(denominator*denominator);
+  *frac         += numerator / denominator;
+  *frac_squared += numerator * numerator / ( denominator * denominator );
 
   free(traceH);
   free(traceH2);

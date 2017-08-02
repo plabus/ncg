@@ -6,7 +6,6 @@
 #include <complex.h>
 #include <mpi.h>
 #include <omp.h>
-#include "mkl_lapacke.h"
 #include "Constants.h"
 #include "Clifford.h"
 #include "Random.h"
@@ -61,11 +60,11 @@ int main() {
 
 
   /* Array allocations */
-  MKL_Complex8 *Matrices;
-  Matrices = (MKL_Complex8 *) calloc(NUM_M*SWEEP,sizeof(MKL_Complex8));
+  float complex *Matrices;
+  Matrices = (float complex *) calloc(NUM_M*SWEEP,sizeof(float complex));
 
   /* Memory needed for H's and L's, and gamma matrices */
-  int memory = NUM_M * SWEEP * sizeof(MKL_Complex8) + size_gammas * sizeof(float complex);
+  int memory = NUM_M * SWEEP * sizeof(float complex) + size_gammas * sizeof(float complex);
 
 /////////////////////////////////////////////////////////////////////
 //                                                                 //
