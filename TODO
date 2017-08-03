@@ -8,7 +8,9 @@ Configuration I/O:
 -- need to save:
     N, P, Q, start(H/C)/restart, RNG state, g2, g4
 
-Always write out action with config
+Autotune acceptance rate
+
+Always write out action with config (need to calculate action for Tr D^4)
 
 Hot start in range / NO max element
 

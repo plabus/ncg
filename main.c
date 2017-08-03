@@ -24,17 +24,14 @@ int main() {
   strftime( buff, 100, "%Y-%m-%d %H:%M:%S", localtime(&now) );
 
   float action;
-  int accepted;
-  double start;
-  int rank, nproc, rest;
-  int loc_msrments, loc_t_max;
-  int stepsize, stepsize_burn;
-  int print_steps = 10; /* Number of steps for percentage printout */
+  double start_time;
+  int start_sweep = 0;
+  int rank, nproc;
   int NUM_H, NUM_L;
 
 
   /* Generate the ODD Clifford Group and number of (anti-)hermitian matrices *
-   * Hermitian Matrices are stored first, antihermitian matrices second      */
+   * Hermitian Matrices are stored first, anti-hermitian matrices second      */
   int size_gammas = (int) pow(2, D-1) * K * K;
   float complex *Gamma_Matrices = (float complex*) malloc(size_gammas*sizeof(float complex));
   Generate_Clifford_Odd_Group(P, Q, Gamma_Matrices, &NUM_H, &NUM_L);
@@ -81,43 +78,49 @@ int main() {
 //                                                                 //
 /////////////////////////////////////////////////////////////////////
 
-  start = cclock();
+  start_time = cclock();
   Matrices_Initialisation(rngs, Matrices, &action, NUM_H, NUM_L);
 
   if(rank==0)
   {
     printf("===============================================\n\n");
-    fprintf(stdout, "  Type: (%d,%d)\n", P, Q);
-    fprintf(stdout, "  Dimension: %d, (K = %d)\n", D, K);
-    fprintf(stdout, "  Signature: %d\n", S);
-    fprintf(stdout, "  Action: S = Tr( %.1f * D^2 + %.1f * D^4 )\n", G2, G4);
-    fprintf(stdout, "\n");
-    fprintf(stdout, "  Number Hermitian Matrices H: %d\n", NUM_H);
-    fprintf(stdout, "  Number Anti-Hermitian Matrices L: %d\n", NUM_L);
-    fprintf(stdout, "  Matrix Size N: %d\n", N);
-    fprintf(stdout, "\n");
-    fprintf(stdout, "  Measurements: %d\n", MEASUREMENTS);
-    fprintf(stdout, "  Points for Distribution: %d\n", POINTS);
-    fprintf(stdout, "  Max x-value for Distribution: %.1f\n", MAX_DIST);
-    fprintf(stdout, "\n");
-    fprintf(stdout, "  MPI Processes: %d\n", nproc);
-    fprintf(stdout, "  OMP Threads: %d\n", omp_get_max_threads());
-    fprintf(stdout, "  Memory used: %.3g MiB\n", memory/1048576.);
-    fprintf(stdout, "\n");
-    fprintf(stdout, "  Starting Calculation...\n");
-    fprintf(stdout, "  Starting time: %s\n", buff);
-    fprintf(stdout, "\n");
+
+    fprintf(stdout, "  Simulation details:\n");
+    fprintf(stdout, "  -------------------\n\n");
+
+    fprintf(stdout, "  MPI Processes                    : %d\n", nproc);
+    fprintf(stdout, "  OMP Threads                      : %d\n", omp_get_max_threads());
+    fprintf(stdout, "  Memory used                      : %.3g MiB\n", memory/1048576.);
+    fprintf(stdout, "  Starting sweep                   : %d\n", start_sweep);
+    fprintf(stdout, "  Chain elements to be produced    : %d sweep\n", CHAIN_LENGTH/SWEEP);
+    fprintf(stdout, "  Starting time                    : %s\n\n", buff);
+
+    fprintf(stdout, "  Geometry:\n");
+    fprintf(stdout, "  ---------\n\n");
+
+    fprintf(stdout, "  Type                             : (%d,%d)\n", P, Q);
+    fprintf(stdout, "  Matrix Size N                    : %d\n", N);
+    fprintf(stdout, "  Action                           : S = Tr( %.1f * D^2 + %.1f * D^4 )\n\n", G2, G4);
+
+    fprintf(stdout, "  Dimension                        : %d, (K = %d)\n", D, K);
+    fprintf(stdout, "  Signature                        : %d\n", S);
+    fprintf(stdout, "  Number      Hermitian Matrices H : %d\n", NUM_H);
+    fprintf(stdout, "  Number Anti-Hermitian Matrices L : %d\n\n", NUM_L);
+
     printf("===============================================\n\n");
+
+    fprintf(stdout, "  GENERATING CHAIN:\n\n");
   }
 
 /////////////////////////////////////////////////////////////////////
 //                                                                 //
-//                          BURN IN                                //
+//                      CHAIN CREATION                             //
 //                                                                 //
 /////////////////////////////////////////////////////////////////////
 
-  accepted = 0;
-  if( rank==0 ) fprintf(stdout, "  GENERATING CHAIN:\n\n");
+  int accepted       = 0;
+  int accepted_old   = 0;
+  int accepted_sweep = 0;
 
   /* Create burn in chain */
   for( int t = 0; t < CHAIN_LENGTH; ++t )
@@ -125,23 +128,22 @@ int main() {
     /* Generate new chain element */
     Get_Next_MCMC_Element(rngs, Matrices, &action, SigmaAB, SigmaABCD, NUM_H, NUM_L, &accepted);
 
-    /* Print some diagonistics at each SWEEP */
-    if( t % SWEEP == 0 )
+    /* Print some diagnostics at each SWEEP */
+    if( t % SWEEP == 0 && t != 0 )
     {
       time_t now = time(0);
       strftime( buff, 100, "%Y-%m-%d %H:%M:%S", localtime(&now) );
-      fprintf( stdout, "  %s, rank %3d, sweep %5d, S = %.3f, acceptance = %4.2f%%\n",
-          buff, rank, (t/SWEEP)+1, action, (double)100*accepted/t );
-    }
-  }
 
-  /* Some user information */
-  if( rank == 0 )
-  {
-    fprintf(stdout, "  Acceptance rate during burn in: %.3f\n",
-                              (float)accepted/(CHAIN_LENGTH*NUM_M));
-    fprintf(stdout, "\n");
-    fprintf(stdout, "===============================================\n\n");
+      accepted_sweep = accepted - accepted_old;
+      accepted_old   = accepted;
+
+      fprintf(
+          stdout,
+          "  %s, rank %3d, sweep %5d, S = %.3f, \
+          acceptance = %4.2f%% (accumulated), acceptance = %4.2f%% (last sweep)\n",
+          buff, rank, (t/SWEEP)+1, action, (100.0*accepted)/(t*NUM_M), (100.0*accepted_sweep)/(t*NUM_M)
+          );
+    }
   }
 
 /////////////////////////////////////////////////////////////////////
@@ -152,7 +154,7 @@ int main() {
 
   if(rank==0) {
     fprintf(stdout, "\n");
-    fprintf(stdout, "  Time to solution: %.3g min\n\n", ((cclock()-start)/60.));
+    fprintf(stdout, "  Time to solution: %.3g min\n\n", ((cclock()-start_time)/60.));
     fprintf(stdout, "===============================================\n");
   }
 
