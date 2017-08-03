@@ -2,7 +2,7 @@
 #define _CONSTANTS_
 
 /* Fundamental Parameters */
-#define N 100
+#define N 5
 #define P 1
 #define Q 0
 #define G2 0.f
@@ -18,7 +18,7 @@
 #define S ((Q-P+8)%8)
 #define K ( (D%2)?(int)pow(2,(D-1)/2):(int)pow(2,D/2) )
 #define SWEEP (N*N)
-#define BURN_IN (100*SWEEP)
+#define CHAIN_LENGTH (1000*SWEEP)
 #define TAU (2*SWEEP)
 #define NUM_M (NUM_H+NUM_L)
 #define TOLERANCE (1E-2)

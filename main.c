@@ -21,7 +21,7 @@ int main() {
 
   char buff[100];
   time_t now = time(0);
-  strftime(buff,100,"%Y-%m-%d %H:%M:%S",localtime(&now));
+  strftime( buff, 100, "%Y-%m-%d %H:%M:%S", localtime(&now) );
 
   float action;
   int accepted;
@@ -75,14 +75,6 @@ int main() {
   MPI_Comm_size(MPI_COMM_WORLD, &nproc);
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
-  loc_msrments = MEASUREMENTS/nproc;
-  rest = MEASUREMENTS%nproc;
-  if(rank<rest) loc_msrments++;
-
-  loc_t_max = (2*TAU*(loc_msrments-1)+1);
-  stepsize_burn = BURN_IN/print_steps;
-  stepsize = loc_t_max/print_steps;
-
 /////////////////////////////////////////////////////////////////////
 //                                                                 //
 //     INIT OF RANDOM MATRICES AND EXP VALUES OF OBSERVABLES       //
@@ -98,7 +90,7 @@ int main() {
     fprintf(stdout, "  Type: (%d,%d)\n", P, Q);
     fprintf(stdout, "  Dimension: %d, (K = %d)\n", D, K);
     fprintf(stdout, "  Signature: %d\n", S);
-    fprintf(stdout, "  Action: S = Tr(%.1f*D^2 + %.1f*D^4)\n", G2, G4);
+    fprintf(stdout, "  Action: S = Tr( %.1f * D^2 + %.1f * D^4 )\n", G2, G4);
     fprintf(stdout, "\n");
     fprintf(stdout, "  Number Hermitian Matrices H: %d\n", NUM_H);
     fprintf(stdout, "  Number Anti-Hermitian Matrices L: %d\n", NUM_L);
@@ -125,26 +117,29 @@ int main() {
 /////////////////////////////////////////////////////////////////////
 
   accepted = 0;
-  if( rank==0 ) fprintf(stdout, "  BURN IN\n");
+  if( rank==0 ) fprintf(stdout, "  GENERATING CHAIN:\n\n");
 
   /* Create burn in chain */
-  for( int t = 0; t < BURN_IN; t++ ) {
-    Get_Next_MCMC_Element(rngs, Matrices, &action, SigmaAB, SigmaABCD,
-                          NUM_H, NUM_L, &accepted);
+  for( int t = 0; t < CHAIN_LENGTH; ++t )
+  {
+    /* Generate new chain element */
+    Get_Next_MCMC_Element(rngs, Matrices, &action, SigmaAB, SigmaABCD, NUM_H, NUM_L, &accepted);
 
-    /* Print percentage of progress at root process */
-    if( t%stepsize_burn==0 && rank==0 )
-      fprintf(stdout, "  After %7.3f min: ~ %5.0f%% done\n",
-              (cclock()-start)/60., (double)t/BURN_IN*100.);
+    /* Print some diagonistics at each SWEEP */
+    if( t % SWEEP == 0 )
+    {
+      time_t now = time(0);
+      strftime( buff, 100, "%Y-%m-%d %H:%M:%S", localtime(&now) );
+      fprintf( stdout, "  %s, rank %3d, sweep %5d, S = %.3f, acceptance = %4.2f%%\n",
+          buff, rank, (t/SWEEP)+1, action, (double)100*accepted/t );
+    }
   }
 
-  if(rank==0) fprintf(stdout, "  After %7.3f min: ~ %5.0f%% done\n",
-                      (cclock()-start)/60., 100.);
-
   /* Some user information */
-  if (rank==0) {
+  if( rank == 0 )
+  {
     fprintf(stdout, "  Acceptance rate during burn in: %.3f\n",
-                              (float)accepted/(BURN_IN*NUM_M));
+                              (float)accepted/(CHAIN_LENGTH*NUM_M));
     fprintf(stdout, "\n");
     fprintf(stdout, "===============================================\n\n");
   }
