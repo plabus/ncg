@@ -31,8 +31,6 @@ One binary only:
 -- need
     write out frequency, step size
 
-Allowing to switch between DP/SP (using macros for compile time decision??)
-
 
 DONE:
 -----
@@ -40,3 +38,4 @@ DONE:
 Just chain generation w/o MKL
 Autotune acceptance rate
 Hot start in range / NO max element
+Allowing to switch between DP/SP (using macros for compile time decision??)
