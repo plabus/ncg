@@ -1,5 +1,5 @@
 CC=mpicc
-C_FLAGS= -Wall -std=c99 -O2 -fopenmp
+C_FLAGS= -Wall -pedantic -std=c99 -O2 -fopenmp
 LIBRARY= -lpthread -lm -fopenmp
 
 

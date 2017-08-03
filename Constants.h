@@ -41,7 +41,7 @@
 // Large N   : NOT commented out (erase the
 // leading "//"
 // All terms : commented out
-#define LARGE_N
+// #define LARGE_N
 
 /* Define step size parameter for MC move */
 /* Optimised for N = 100                  */

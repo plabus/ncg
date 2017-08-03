@@ -24,7 +24,6 @@ int main() {
   strftime(buff,100,"%Y-%m-%d %H:%M:%S",localtime(&now));
 
   float action;
-  float incr;
   int accepted;
   double start;
   int rank, nproc, rest;
@@ -93,7 +92,8 @@ int main() {
   start = cclock();
   Matrices_Initialisation(rngs, Matrices, &action, NUM_H, NUM_L);
 
-  if(rank==0) {
+  if(rank==0)
+  {
     printf("===============================================\n\n");
     fprintf(stdout, "  Type: (%d,%d)\n", P, Q);
     fprintf(stdout, "  Dimension: %d, (K = %d)\n", D, K);

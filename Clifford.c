@@ -9,8 +9,8 @@
 #define sgn(x) ((x > 0) ? 1 : ((x < 0) ? -1 : 0))
 
 void printMint(int *matrix, int n) {
-  for(int i=0;i<n;++i) {  
-    for(int j=0;j<n;++j) {  
+  for(int i=0;i<n;++i) {
+    for(int j=0;j<n;++j) {
       if(matrix[i*n+j]==1) printf("  1");
       else if(matrix[i*n+j]==-1) printf(" -1");
       else if(matrix[i*n+j]==2) printf("  i");
@@ -22,8 +22,8 @@ void printMint(int *matrix, int n) {
 }
 
 void printMcomplex(float complex *matrix, int n) {
-  for(int i=0;i<n;++i) {  
-    for(int j=0;j<n;++j) {  
+  for(int i=0;i<n;++i) {
+    for(int j=0;j<n;++j) {
       if( abs(creal(matrix[i*n+j]))<1e-3 && abs(cimag(matrix[i*n+j]))<1e-3 ) printf("  0");
       else if( abs(creal(matrix[i*n+j])-1.)<1e-3 && abs(cimag(matrix[i*n+j]))<1e-3 ) printf("  1");
       else if( abs(creal(matrix[i*n+j])+1.)<1e-3 && abs(cimag(matrix[i*n+j]))<1e-3 ) printf(" -1");
@@ -216,7 +216,7 @@ void Generate_Gammas(int p, int q, float complex *gammas) {
    *                                               *
    * GAMMA MATRICES IN D-DIM (D even):             *
    * (gamma_mu x sigma1, 1 x sigma2, 1 x sigma3 )  *
-   * where gamma_mu are the matrices for d = dim-2 * 
+   * where gamma_mu are the matrices for d = dim-2 *
    *                                               *
    * GAMMA MATRICES IN D-DIM (D odd):              *
    * (gamma_mu, gamma_5)                           *
@@ -249,7 +249,7 @@ void Generate_Gammas(int p, int q, float complex *gammas) {
   }
 
   /* The EVEN DIMENSIONAL case */
-  else if(dim>2 && dim%2==0) { 
+  else if(dim>2 && dim%2==0) {
     /* Allocate memory for the (d-2) dimensional matrices */
     float complex *small_gammas = (float complex*) calloc(small_size,sizeof(float complex));
 
@@ -323,7 +323,7 @@ void Generate_Gammas(int p, int q, float complex *gammas) {
       /* Copy new gamma_5 back to buffer and set gamma_5 to zero */
       for(int i=0;i<k*k;++i) {
         buffer[i] = gammas[i+offset];
-        gammas[i+offset] = 0; 
+        gammas[i+offset] = 0;
       }
     }
 
@@ -339,7 +339,7 @@ void Generate_Gammas(int p, int q, float complex *gammas) {
     for(int i=0;i<k*k;++i) {
       gammas[i+offset] = factor * buffer[i];
     }
-    
+
     free(buffer);
   }
 
@@ -360,7 +360,7 @@ void Reshuffle_Clifford_Group(int p, int q, float complex *big_gammas, int num_h
   float complex *buffer = (float complex*) malloc(num*k*k*sizeof(float complex));
 
   int off1 = 0, off2 = num_h*k*k;
-  
+
   for(int n=0;n<num;++n) {
     /* Claculate the first element of the gamma matrix squared */
     first = 0;
@@ -515,7 +515,7 @@ int calculate_sigmaABCD(float complex *Gamma_Matrices, int a, int b, int c, int 
   int offb=b*K*K;
   int offc=c*K*K;
   int offd=d*K*K;
-  
+
   /* TRACE OVER FOUR MATRICES */
   for(int ii=0;ii<K;++ii)
     for(int jj=0;jj<K;++jj)
@@ -534,7 +534,6 @@ void Calculate_Trace_Gamma_ABCD(float complex *Gamma_Matrices, int **sigmaABCD, 
   int counter;
   int num_m = pow(2,D-1);
   int total_sign;
-  int s1, s2, c1, c2, c3;
   int comb1;
   int comb2;
   int comb3;
@@ -556,7 +555,7 @@ void Calculate_Trace_Gamma_ABCD(float complex *Gamma_Matrices, int **sigmaABCD, 
           if(d<=b || d<=c || d==a) continue;
 
           /* (Anti-) commutators of Hermitian matrices vanish if there aren't *
-           * pairs of (tracefree) non-tracefree matrices <=> sgn = -1.        */ 
+           * pairs of (tracefree) non-tracefree matrices <=> sgn = -1.        */
 	  total_sign = (a<NUM_H?1:-1)*(b<NUM_H?1:-1)*(c<NUM_H?1:-1)*(d<NUM_H?1:-1);
           if(total_sign==-1) continue;
           comb1 = calculate_sigmaABCD(Gamma_Matrices, a, b, c, d, NUM_H);
@@ -569,7 +568,8 @@ void Calculate_Trace_Gamma_ABCD(float complex *Gamma_Matrices, int **sigmaABCD, 
             comb5 = calculate_sigmaABCD(Gamma_Matrices, a, d, b, c, NUM_H);
             comb6 = calculate_sigmaABCD(Gamma_Matrices, a, d, c, b, NUM_H);
 
-            /* write to sigma s.t. sigmaABCD[A][] = {#, B, C, D, b1, b2, c1, c2, d1, d2, ... }  */
+            /* write to sigma with the following data layout:               *
+             * sigmaABCD[A][] = {#, B, C, D, b1, b2, c1, c2, d1, d2, ... }  */
             sigmaABCD[a][9*counter+1] = b;
             sigmaABCD[a][9*counter+2] = c;
             sigmaABCD[a][9*counter+3] = d;

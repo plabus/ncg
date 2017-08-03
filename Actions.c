@@ -228,11 +228,18 @@ float delta_action_traceD2(float complex *Matrices, int position, float complex 
   int offset = position*SWEEP;
 
   /* Generate a real number for diagonal element or else a complex number in upper half */
-  if (pos_x == pos_y) { /* DIAGONAL CASE */
+  if (pos_x == pos_y) /* DIAGONAL CASE */
+  {
 
-    if(position<NUM_H) { /* Case of the matrices H */
+    if(position<NUM_H) /* Case of the matrices H */
+    {
       trace_old = 0.f;
-      for(int l=0;l<N;++l) trace_old += creal( Matrices[l*N+l+offset] );
+
+      for(int l=0;l<N;++l)
+      {
+        trace_old += creal( Matrices[l*N+l+offset] );
+      }
+
       trace_new = trace_old - creal( Matrices[pos_upper+offset] ) + creal(temp);
 
 #ifdef LARGE_N
@@ -241,11 +248,15 @@ float delta_action_traceD2(float complex *Matrices, int position, float complex 
       delta = 2 * K * N * ( creal(temp) * creal(temp) - creal( Matrices[pos_upper+offset] ) * creal( Matrices[pos_upper+offset] ) ) +
               2 * K * ( trace_new*trace_new - trace_old*trace_old );
 #endif
-    } else { /* Case of the traceless matrices L */
+    }
+    else /* Case of the traceless matrices L */
+    {
       delta = 2 * K * N * ( creal(temp) * creal(temp) - creal( Matrices[pos_upper+offset] ) * creal( Matrices[pos_upper+offset] ) );
     }
 
-  } else { /* OFF-DIAGONAL CASE */
+  }
+  else /* OFF-DIAGONAL CASE */
+  {
     /* If an off-diagonal element is changed the trace remains the same, *
      * which implies that the two cases for H and L are the same.        */
     delta = 4 * K * N * ( creal(temp) * creal(temp) + cimag(temp) * cimag(temp)
@@ -268,7 +279,6 @@ float delta_action_traceD4(float complex *Matrices, int positionA, float complex
   int off = positionA * SWEEP;
   int offB, offC, offD;
   int pos_upper = pos_x<=pos_y ? pos_x*N+pos_y : pos_y*N+pos_x;
-  int pos_lower = pos_x<=pos_y ? pos_y*N+pos_x : pos_x*N+pos_y;
   int sgnA = positionA < NUM_H ? 1 : -1;
   int sgnB, sgnC, sgnD, sAB;
   int b1, b2, c1, c2, d1, d2, s;
@@ -300,7 +310,7 @@ float delta_action_traceD4(float complex *Matrices, int positionA, float complex
   float trAE;
 
   float a, b, c, d;
-  float abs2, mixsum, mixdiff;
+  float abs2, mixsum;
   float A_ii, A_jj;
   float c_B, d_B;
   float c_C, d_C;
@@ -330,7 +340,6 @@ float delta_action_traceD4(float complex *Matrices, int positionA, float complex
 
   abs2    = a * a + b * b;
   mixsum  = a * c + b * d;
-  mixdiff = a * d - b * c;
 
   delta1 = 0.f;
   delta2 = 0.f;

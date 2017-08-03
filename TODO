@@ -1,18 +1,6 @@
 TODO:
 -----
 
-One binary only:
--- parameter read in
-   (a) command line args
-   (b) ini files
--- what to pass?
--- need
-    write out frequency, step size
-
-Just chain generation w/o MKL + separate  utility for EV measurements
-
-Allowing to switch between DP/SP (using macros for compile time decision??)
-
 Configuration I/O:
 -- restart
 -- special file format?
@@ -26,12 +14,26 @@ Hot start in range / NO max element
 
 Fixed RNG seed
 
+Separate utility for EV measurements
+
 Dirac stencil & Arnoldi
 
 
 PROGRESSING:
 ------------
 
+One binary only:
+-- parameter read in
+   (a) command line args
+   (b) ini files
+-- what to pass?
+-- need
+    write out frequency, step size
+
+Allowing to switch between DP/SP (using macros for compile time decision??)
+
 
 DONE:
 -----
+
+Just chain generation w/o MKL
