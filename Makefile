@@ -14,7 +14,7 @@ ncg: Utilities.o Clifford.o Random.o Actions.o MonteCarlo.o main.o
 
 clean:
 	rm -f *.o
-	rm -f sim.x
+	rm -f ncg
 	rm -f benchmark.x
 	rm -f evs
 	rm -f dist

@@ -7,8 +7,8 @@
 
 /**********************************************************************************************/
 
-float tr1(float complex *Matrices, int pos1, int NUM_H) {
-  float trace = 0.f;
+double tr1(REAL complex *Matrices, int pos1, int NUM_H) {
+  double trace = 0.f;
   int off1 = pos1*SWEEP;
 
   if(pos1<NUM_H) {
@@ -21,8 +21,8 @@ float tr1(float complex *Matrices, int pos1, int NUM_H) {
 }
 
 
-float tr2(float complex *Matrices, int pos1, int pos2) {
-  float trace = 0.f;
+double tr2(REAL complex *Matrices, int pos1, int pos2) {
+  double trace = 0.f;
   int off1 = pos1*SWEEP;
   int off2 = pos2*SWEEP;
 
@@ -37,8 +37,8 @@ float tr2(float complex *Matrices, int pos1, int pos2) {
 }
 
 
-float tr3(float complex *Matrices, int pos1, int pos2, int pos3) {
-  float trace = 0.f;
+double tr3(REAL complex *Matrices, int pos1, int pos2, int pos3) {
+  double trace = 0.f;
   int off1 = pos1*SWEEP;
   int off2 = pos2*SWEEP;
   int off3 = pos3*SWEEP;
@@ -59,8 +59,8 @@ float tr3(float complex *Matrices, int pos1, int pos2, int pos3) {
 
 /**********************************************************************************************/
 
-float tr2_real_ij(float complex *Matrices, int pos1, int pos2, int pos_x, int pos_y) {
-  float sum = 0.f;
+double tr2_real_ij(REAL complex *Matrices, int pos1, int pos2, int pos_x, int pos_y) {
+  double sum = 0.f;
   int off1 = pos1*SWEEP;
   int off2 = pos2*SWEEP;
 
@@ -77,8 +77,8 @@ float tr2_real_ij(float complex *Matrices, int pos1, int pos2, int pos_x, int po
 }
 
 
-float tr2_imag_ij(float complex *Matrices, int pos1, int pos2, int pos_x, int pos_y) {
-  float sum = 0.f;
+double tr2_imag_ij(REAL complex *Matrices, int pos1, int pos2, int pos_x, int pos_y) {
+  double sum = 0.f;
   int off1 = pos1*SWEEP;
   int off2 = pos2*SWEEP;
 
@@ -95,8 +95,8 @@ float tr2_imag_ij(float complex *Matrices, int pos1, int pos2, int pos_x, int po
 }
 
 
-float tr3_real_ij(float complex *Matrices, int pos1, int pos2, int pos3, int pos_x, int pos_y) {
-  float sum = 0.f;
+double tr3_real_ij(REAL complex *Matrices, int pos1, int pos2, int pos3, int pos_x, int pos_y) {
+  double sum = 0.f;
   int off1 = pos1*SWEEP;
   int off2 = pos2*SWEEP;
   int off3 = pos3*SWEEP;
@@ -118,8 +118,8 @@ float tr3_real_ij(float complex *Matrices, int pos1, int pos2, int pos3, int pos
 }
 
 
-float tr3_imag_ij(float complex *Matrices, int pos1, int pos2, int pos3, int pos_x, int pos_y) {
-  float sum = 0.f;
+double tr3_imag_ij(REAL complex *Matrices, int pos1, int pos2, int pos3, int pos_x, int pos_y) {
+  double sum = 0.f;
   int off1 = pos1*SWEEP;
   int off2 = pos2*SWEEP;
   int off3 = pos3*SWEEP;
@@ -141,9 +141,9 @@ float tr3_imag_ij(float complex *Matrices, int pos1, int pos2, int pos3, int pos
 }
 
 
-float matrix_norm_squared(float complex *Matrices, int pos1) {
-  float sum_off_diag = 0.f;
-  float trace_squared = 0.f;
+double matrix_norm_squared(REAL complex *Matrices, int pos1) {
+  double sum_off_diag = 0.f;
+  double trace_squared = 0.f;
   int off1 = pos1*SWEEP;
 
   for(int a=0;a<N;a++) {
@@ -159,8 +159,8 @@ float matrix_norm_squared(float complex *Matrices, int pos1) {
 }
 
 
-float row_norm_squared(float complex *Matrices, int pos1, int pos_row) {
-  float sum = 0.f;
+double row_norm_squared(REAL complex *Matrices, int pos1, int pos_row) {
+  double sum = 0.f;
   int off = pos1*SWEEP + pos_row*N;
 
   for(int a=0;a<N;a++) {
@@ -173,14 +173,14 @@ float row_norm_squared(float complex *Matrices, int pos1, int pos_row) {
 
 /**********************************************************************************************/
 
-float traceD2(float complex *Matrices, int NUM_H, int NUM_L)
+double traceD2(REAL complex *Matrices, int NUM_H, int NUM_L)
 {
   /* Calculating the action S = Tr D^2 */
   int itimesN;
   int Nplus1 = N+1;
   int offset;
-  float trace_H2 = 0.f;
-  float trace_H = 0.f;
+  double trace_H2 = 0.f;
+  double trace_H = 0.f;
 
   /* For the Tr H^2 part */
   for(int n=0;n<NUM_M;++n) { /* This is for all matrices H and L */
@@ -206,7 +206,7 @@ float traceD2(float complex *Matrices, int NUM_H, int NUM_L)
 }
 
 
-float traceD4(float complex *Matrices, int NUM_H, int NUM_L)
+double traceD4(REAL complex *Matrices, int NUM_H, int NUM_L)
 {
   return 0;
 }
@@ -219,11 +219,11 @@ float traceD4(float complex *Matrices, int NUM_H, int NUM_L)
 /********                                                                *********/
 /*********************************************************************************/
 
-float delta_action_traceD2(float complex *Matrices, int position, float complex temp, int pos_x, int pos_y, int NUM_H, int NUM_L)
+double delta_action_traceD2(REAL complex *Matrices, int position, REAL complex temp, int pos_x, int pos_y, int NUM_H, int NUM_L)
 {
 
-  float delta;
-  float trace_new, trace_old;
+  double delta;
+  double trace_new, trace_old;
   int pos_upper = pos_x<=pos_y ? pos_x*N+pos_y : pos_y*N+pos_x;
   int offset = position*SWEEP;
 
@@ -274,7 +274,7 @@ float delta_action_traceD2(float complex *Matrices, int position, float complex 
 /********                                                                *********/
 /*********************************************************************************/
 
-float delta_action_traceD4(float complex *Matrices, int positionA, float complex temp, int pos_x, int pos_y, int *sigmaAB, int **sigmaABCD, int NUM_H, int NUM_L)
+double delta_action_traceD4(REAL complex *Matrices, int positionA, REAL complex temp, int pos_x, int pos_y, int *sigmaAB, int **sigmaABCD, int NUM_H, int NUM_L)
 {
   int off = positionA * SWEEP;
   int offB, offC, offD;
@@ -285,41 +285,41 @@ float delta_action_traceD4(float complex *Matrices, int positionA, float complex
   int num_trABCD = sigmaABCD[positionA][0];
 
   /* Save the old value of the matrix where a new element was generated. */
-  float complex old = Matrices[pos_upper+off];
+  REAL complex old = Matrices[pos_upper+off];
 
-  float delta1;
-  float delta2;
-  float delta3;
+  double delta1;
+  double delta2;
+  double delta3;
 
-  float trA;
-  float trB;
-  float trC;
-  float trD;
-  float trA2;
-  float trB2;
-  float trAB;
-  float trAB2;
+  double trA;
+  double trB;
+  double trC;
+  double trD;
+  double trA2;
+  double trB2;
+  double trAB;
+  double trAB2;
 
-  float trABtrCD;
-  float trACtrBD;
-  float trADtrBC;
-  float trF1;
-  float trF2;
-  float trF3;
-  float trF4;
-  float trAE;
+  double trABtrCD;
+  double trACtrBD;
+  double trADtrBC;
+  double trF1;
+  double trF2;
+  double trF3;
+  double trF4;
+  double trAE;
 
-  float a, b, c, d;
-  float abs2, mixsum;
-  float A_ii, A_jj;
-  float c_B, d_B;
-  float c_C, d_C;
-  float c_D, d_D;
-  float B_ii, B_jj;
-  float F;
-  float sum[10] = {0,0,0,0,0,0,0,0,0,0};
-  float part_Ia, part_Ib, part_Ic;
-  float part_IIa, part_IIb, part_IIc;
+  double a, b, c, d;
+  double abs2, mixsum;
+  double A_ii, A_jj;
+  double c_B, d_B;
+  double c_C, d_C;
+  double c_D, d_D;
+  double B_ii, B_jj;
+  double F;
+  double sum[10] = {0,0,0,0,0,0,0,0,0,0};
+  double part_Ia, part_Ib, part_Ic;
+  double part_IIa, part_IIb, part_IIc;
 
 
   /*******************************************************

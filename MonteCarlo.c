@@ -10,8 +10,8 @@
 // Initialise all Matrices, their Eigenvalues and the action
 void Matrices_Initialisation(
     struct pcg32_random_t *rng,
-    float complex *Matrices,
-    float *action,
+    REAL complex *Matrices,
+    double *action,
     int NUM_H,
     int NUM_L
     )
@@ -46,14 +46,14 @@ void Matrices_Initialisation(
 
 
 // Creates a new Markov chain element
-void Get_Next_MCMC_Element(struct pcg32_random_t *rng, float complex *Matrices, float *action,
-                           int *sigmaAB, int **sigmaABCD, int NUM_H, int NUM_L, int *acc, float step_size)
+void Get_Next_MCMC_Element(struct pcg32_random_t *rng, REAL complex *Matrices, double *action,
+                           int *sigmaAB, int **sigmaABCD, int NUM_H, int NUM_L, int *acc, double step_size)
 {
   int pos_x, pos_y;
   int pos_upper, pos_lower;
-  float p;                    // Random float for accepting MC elemement
-  float complex temp;         // To save random value that is changed
-  float delta_action;
+  double p;                 // Random double for accepting MC elemement
+  REAL complex temp;       // To save random value that is changed
+  double delta_action;
 
   /* For each Matrix change a value in the upper triangle randomly *
    * calculate the the change of the action and finally decide if  *
@@ -63,7 +63,7 @@ void Get_Next_MCMC_Element(struct pcg32_random_t *rng, float complex *Matrices, 
     /* Set the offset to write to the right matrix */
     int offset = n * SWEEP;
 
-    /* Calculate random float in [0,1) for Monte Carlo Move Decision */
+    /* Calculate random double in [0,1) for Monte Carlo Move Decision */
     p = ldexp(pcg32_random_r(&rng[n]),-32);
 
     /* Calculate two random integers and generate position in upper and lower half */
@@ -85,7 +85,7 @@ void Get_Next_MCMC_Element(struct pcg32_random_t *rng, float complex *Matrices, 
 
     /* Finally test if new action is smaller or except randomly if exp supressed, *
      * if yes write new element in upper and lower half and copy new eigenvalues  */
-    if( delta_action<=0 || expf(-delta_action) > p ) {
+    if( delta_action<=0 || exp(-delta_action) > p ) {
       *acc += 1;
       *action += delta_action;
       if(pos_x != pos_y) {
@@ -101,8 +101,8 @@ void Get_Next_MCMC_Element(struct pcg32_random_t *rng, float complex *Matrices, 
 
 
 void tune_step_size(
-    float acceptance_rate, // acceptance rate so far
-    float* step_size      // reference to step_size to be tuned
+    double acceptance_rate, // acceptance rate so far
+    double* step_size      // reference to step_size to be tuned
     )
 {
   // Assuming there is an ideal aceptance rate for Metropolis-Hastings,

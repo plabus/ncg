@@ -1,6 +1,10 @@
 #ifndef _CONSTANTS_
 #define _CONSTANTS_
 
+// Floating point precision use
+// (either double or float)
+#define REAL double
+
 /* Fundamental Parameters */
 #define N 5
 #define P 1
@@ -18,7 +22,7 @@
 #define S ((Q-P+8)%8)
 #define K ( (D%2)?(int)pow(2,(D-1)/2):(int)pow(2,D/2) )
 #define SWEEP (N*N)
-#define CHAIN_LENGTH (1000*SWEEP)
+#define CHAIN_LENGTH (20*SWEEP)
 #define TAU (2*SWEEP)
 #define NUM_M (NUM_H+NUM_L)
 #define TOLERANCE (1E-2)

@@ -4,12 +4,19 @@
 #include <math.h>
 #include <time.h>
 #include <complex.h>
+#include <string.h>
 #include <mpi.h>
 #include <omp.h>
 #include "Constants.h"
+#include "Utilities.h"
 #include "Clifford.h"
 #include "Random.h"
 #include "MonteCarlo.h"
+
+// Double escape in order to print
+// precision REAL as string
+#define xstr(a) str(a)
+#define str(a) #a
 
 int main() {
 
@@ -23,7 +30,7 @@ int main() {
   time_t now = time(0);
   strftime( buff, 100, "%Y-%m-%d %H:%M:%S", localtime(&now) );
 
-  float action;
+  double action;
   double start_time;
   int start_sweep = 0;
   int rank, nproc;
@@ -56,11 +63,11 @@ int main() {
 
 
   /* Array allocations */
-  float complex *Matrices;
-  Matrices = (float complex *) calloc(NUM_M*SWEEP,sizeof(float complex));
+  REAL complex *Matrices;
+  Matrices = (REAL complex *) calloc(NUM_M*SWEEP,sizeof(REAL complex));
 
   /* Memory needed for H's and L's, and gamma matrices */
-  int memory = NUM_M * SWEEP * sizeof(float complex) + size_gammas * sizeof(float complex);
+  int memory = NUM_M * SWEEP * sizeof(REAL complex) + size_gammas * sizeof(float complex);
 
 /////////////////////////////////////////////////////////////////////
 //                                                                 //
@@ -88,6 +95,7 @@ int main() {
     fprintf(stdout, "  Simulation details:\n");
     fprintf(stdout, "  -------------------\n\n");
 
+    fprintf(stdout, "  Compiled in precision            : %s\n", xstr(REAL));
     fprintf(stdout, "  MPI Processes                    : %d\n", nproc);
     fprintf(stdout, "  OMP Threads                      : %d\n", omp_get_max_threads());
     fprintf(stdout, "  Memory used                      : %.3g MiB\n", memory/1048576.);
@@ -120,7 +128,7 @@ int main() {
 
   int accepted     = 0;   // counter for total accepted steps
   int accepted_old = 0;   // buffer to calculate accepted steps per sweep
-  float step_size  = 0.5; // initial step length
+  double step_size  = 0.5; // initial step length
 
   for( int t = 0; t < CHAIN_LENGTH; ++t )
   {
@@ -153,6 +161,8 @@ int main() {
     }
   }
 
+  // printM(N, Matrices);
+
 /////////////////////////////////////////////////////////////////////
 //                                                                 //
 //                       FINALISATION                              //
@@ -161,7 +171,7 @@ int main() {
 
   if(rank==0) {
     fprintf(stdout, "\n");
-    fprintf(stdout, "  Time to solution: %.3g min\n\n", ((cclock()-start_time)/60.));
+    fprintf(stdout, "  Total time of simulation %.3g min\n\n", ((cclock()-start_time)/60.));
     fprintf(stdout, "===============================================\n");
   }
 

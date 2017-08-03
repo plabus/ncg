@@ -19,7 +19,7 @@ double cclock() {
 }
 
 // Print the Matrix (for debugging)
-void printM(const int L, float complex * M) {
+void printM(const int L, REAL complex * M) {
   for(int i = 0; i < L; i++) {
     for(int j = 0; j < L; j++)
       if( cimag(M[i*L+j])>=0) printf( " %.2f + %.2fi\t ", creal( M[i*L+j] ),  cimag( M[i*L+j] ) );
