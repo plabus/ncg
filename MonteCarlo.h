@@ -3,13 +3,6 @@
 
 #include "Random.h"
 
-double cclock();
-void printM(const int L, float complex * M);
-int compare_floats(const void * a, const void * b);
-float delta_approx(float);
-void nullify(const int l, float complex * m);
-
-
 // Initialise each of the NUM_H + NUM_L matrices
 // randomly with elements in the range [-1-i, 1+i],
 // and calculate (and set) initialial action

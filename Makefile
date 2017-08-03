@@ -6,7 +6,7 @@ LIBRARY= -lpthread -lm -fopenmp
 .PHONY: all
 all: ncg
 
-ncg: Clifford.o Random.o Actions.o MonteCarlo.o main.o
+ncg: Utilities.o Clifford.o Random.o Actions.o MonteCarlo.o main.o
 	${CC} -o $@ $^ $(C_FLAGS) $(LIBRARY) #-pg
 
 %.o: %.c
