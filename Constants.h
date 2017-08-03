@@ -31,9 +31,6 @@
 #define MAX_DIST (3.f+(D>4?D-4:0)*1.f)
 #define POINTS (2000*2*(int)MAX_DIST)
 #define EPSILON 1E-2
-// This is the maximum value for the matrix
-// elements --- as in M_ij \in [-X-iX,X+iX]
-#define MAX_ELEMENT 1.0
 // The following determines if "Large N"
 // is applied, i.e. if terms of O(N^0)
 // are ignored when calculating \Delta S

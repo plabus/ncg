@@ -210,23 +210,34 @@ void Arrange_Dirac_Matrix(float complex *gamma_passed, float complex *Matrices, 
 
 
 // Initialise all Matrices, their Eigenvalues and the action
-void Matrices_Initialisation(struct pcg32_random_t *rng, float complex *Matrices, float *action, int NUM_H, int NUM_L)
+void Matrices_Initialisation(
+    struct pcg32_random_t *rng,
+    float complex *Matrices,
+    float *action,
+    int NUM_H,
+    int NUM_L
+    )
 {
-  /* Set high-temperature initial state for all *
-   * matrices and calculate initial action      */
+  // Set high-temperature initial state for all
+  // matrices, where random elements are in the
+  // range [-1-i, 1+i], and calculate initial action
 
   int itimesN;
   int Nplus1 = N+1;
   int offset;
 
-  for (int n=0;n<NUM_M;++n) {
+  for( int n = 0; n < NUM_M; ++n )
+  {
     offset = n*SWEEP;
-    for (int i=0;i<N;++i) {
-      Matrices[i*Nplus1+offset] = MAX_ELEMENT * (pcg32_boundedrand_r(&rng[n],2)?-1:1) * ldexp(pcg32_random_r(&rng[n]),-32) + 0.0 * I;
+    for( int i = 0; i < N; ++i )
+    {
+      Matrices[i*Nplus1+offset] = (pcg32_boundedrand_r(&rng[n],2)?-1:1) * ldexp(pcg32_random_r(&rng[n]),-32)
+                                + 0.0 * I;
       itimesN = i*N;
-      for (int j=i+1;j<N;j++) {
-        Matrices[itimesN+j+offset] = MAX_ELEMENT * (pcg32_boundedrand_r(&rng[n],2)?-1:1) * ldexp(pcg32_random_r(&rng[n]),-32)
-                                   + I * MAX_ELEMENT * (pcg32_boundedrand_r(&rng[n],2)?-1:1) * ldexp(pcg32_random_r(&rng[n]),-32);
+      for( int j = i + 1; j < N; ++j )
+      {
+        Matrices[itimesN+j+offset] = (pcg32_boundedrand_r(&rng[n],2)?-1:1) * ldexp(pcg32_random_r(&rng[n]),-32)
+                                   + I * (pcg32_boundedrand_r(&rng[n],2)?-1:1) * ldexp(pcg32_random_r(&rng[n]),-32);
         Matrices[j*N+i+offset]     =  conj( Matrices[itimesN+j+offset] ); /* This is hermitian! */
       }
     }
@@ -271,8 +282,6 @@ void Get_Next_MCMC_Element(struct pcg32_random_t *rng, float complex *Matrices, 
       temp  = step_size * (pcg32_boundedrand_r(&rng[n],2)?-1:1)*ldexp(pcg32_random_r(&rng[n]),-32) + 0.0 * I;
     }
     temp += Matrices[pos_upper+offset];
-    if( creal( temp ) > MAX_ELEMENT || creal( temp ) < -MAX_ELEMENT ) continue;
-    if( cimag( temp ) > MAX_ELEMENT || cimag( temp ) < -MAX_ELEMENT ) continue;
 
     //delta_action = delta_action_traceD2(Matrices, n, temp, pos_x, pos_y, NUM_H, NUM_L);
     delta_action  = G2 * delta_action_traceD2(Matrices, n, temp, pos_x, pos_y, NUM_H, NUM_L);

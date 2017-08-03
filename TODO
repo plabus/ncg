@@ -8,11 +8,10 @@ Configuration I/O:
 -- need to save:
     N, P, Q, start(H/C)/restart, RNG state, g2, g4
 
-Autotune acceptance rate
+Calculate action for Tr D^4 when initalising
 
-Always write out action with config (need to calculate action for Tr D^4)
+Always write out action with config
 
-Hot start in range / NO max element
 
 Fixed RNG seed
 
@@ -39,3 +38,5 @@ DONE:
 -----
 
 Just chain generation w/o MKL
+Autotune acceptance rate
+Hot start in range / NO max element
