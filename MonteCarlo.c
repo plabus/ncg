@@ -243,7 +243,6 @@ void Matrices_Initialisation(
     }
   }
 
-  //*action = traceD2(Matrices, NUM_H, NUM_L);
   //*action = G2 * traceD2(Matrices, NUM_H, NUM_L) + G4 * traceD4(Matrices, NUM_H, NUM_L);
 }
 
@@ -283,7 +282,6 @@ void Get_Next_MCMC_Element(struct pcg32_random_t *rng, float complex *Matrices, 
     }
     temp += Matrices[pos_upper+offset];
 
-    //delta_action = delta_action_traceD2(Matrices, n, temp, pos_x, pos_y, NUM_H, NUM_L);
     delta_action  = G2 * delta_action_traceD2(Matrices, n, temp, pos_x, pos_y, NUM_H, NUM_L);
     delta_action += G4 * delta_action_traceD4(Matrices, n, temp, pos_x, pos_y, sigmaAB, sigmaABCD, NUM_H, NUM_L);
 
