@@ -4,7 +4,7 @@
 /* Fundamental Parameters */
 #define N 5
 #define P 1
-#define Q 0
+#define Q 3
 #define G2 0.f
 #define G4 1.f
 
@@ -42,14 +42,5 @@
 // leading "//"
 // All terms : commented out
 // #define LARGE_N
-
-/* Define step size parameter for MC move */
-/* Optimised for N = 100                  */
-#define STEP_SIZE ( 12.f * (\
-  6.02775e-09*N*N*N*N -\
-  1.59194e-06*N*N*N   +\
-  0.000151927*N*N     -\
-  0.006313170*N       +\
-  0.109001000) )
 
 #endif

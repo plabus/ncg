@@ -12,7 +12,13 @@ void nullify(const int l, float complex * m);
 
 void Matrices_Initialisation(struct pcg32_random_t *rng, float complex *Matrices, float *action, int NUM_H, int NUM_L);
 void Get_Next_MCMC_Element(struct pcg32_random_t *rng, float complex *Matrices, float *action,
-                           int *sigmaAB, int **sigmaABCD, int NUM_H, int NUM_L, int *acc);
+                           int *sigmaAB, int **sigmaABCD, int NUM_H, int NUM_L, int *acc, float step_size);
+
+// Tune the step size based on some acceptance rate measured
+void tune_step_size(
+    float accepance_rate, // acceptance rate so far
+    float* step_size      // reference to step_size to be tuned
+    );
 
 void Arrange_Anticommutator(float complex * m, float complex * acomm);
 void Arrange_Commutator(float complex * m, float complex * comm);

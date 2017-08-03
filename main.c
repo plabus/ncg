@@ -118,30 +118,37 @@ int main() {
 //                                                                 //
 /////////////////////////////////////////////////////////////////////
 
-  int accepted       = 0;
-  int accepted_old   = 0;
-  int accepted_sweep = 0;
+  int accepted     = 0;   // counter for total accepted steps
+  int accepted_old = 0;   // buffer to calculate accepted steps per sweep
+  float step_size  = 0.5; // initial step length
 
-  /* Create burn in chain */
   for( int t = 0; t < CHAIN_LENGTH; ++t )
   {
-    /* Generate new chain element */
-    Get_Next_MCMC_Element(rngs, Matrices, &action, SigmaAB, SigmaABCD, NUM_H, NUM_L, &accepted);
+    // Generate new chain element
+    Get_Next_MCMC_Element(rngs, Matrices, &action, SigmaAB, SigmaABCD, NUM_H, NUM_L, &accepted, step_size);
 
-    /* Print some diagnostics at each SWEEP */
+    // Print some diagnostics at each SWEEP
     if( t % SWEEP == 0 && t != 0 )
     {
+      // Get the time of date as string
       time_t now = time(0);
       strftime( buff, 100, "%Y-%m-%d %H:%M:%S", localtime(&now) );
 
-      accepted_sweep = accepted - accepted_old;
-      accepted_old   = accepted;
+      // Calculate number of accepts in last sweep, as well as
+      // the accumulated and recent (last sweep) acceptance rates,
+      // finally tune the step size according to recent acceptance
+      // (Remember, we are counting accepts for each matrix and each step t)
+      int accepted_sweep    = accepted - accepted_old;
+      double acc_rate_accum = (double) accepted / ( t * NUM_M );
+      double acc_rate_sweep = (double) accepted_sweep / ( SWEEP * NUM_M );
+      accepted_old = accepted;
+      tune_step_size( acc_rate_sweep, &step_size );
 
       fprintf(
           stdout,
           "  %s, rank %3d, sweep %5d, S = %.3f, \
           acceptance = %4.2f%% (accumulated), acceptance = %4.2f%% (last sweep)\n",
-          buff, rank, (t/SWEEP)+1, action, (100.0*accepted)/(t*NUM_M), (100.0*accepted_sweep)/(t*NUM_M)
+          buff, rank, t/SWEEP, action, 100.0*acc_rate_accum, 100.0*acc_rate_sweep
           );
     }
   }

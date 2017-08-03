@@ -239,7 +239,7 @@ void Matrices_Initialisation(struct pcg32_random_t *rng, float complex *Matrices
 
 // Creates a new Markov chain element
 void Get_Next_MCMC_Element(struct pcg32_random_t *rng, float complex *Matrices, float *action,
-                           int *sigmaAB, int **sigmaABCD, int NUM_H, int NUM_L, int *acc)
+                           int *sigmaAB, int **sigmaABCD, int NUM_H, int NUM_L, int *acc, float step_size)
 {
   int pos_x, pos_y;
   int pos_upper, pos_lower;
@@ -265,10 +265,10 @@ void Get_Next_MCMC_Element(struct pcg32_random_t *rng, float complex *Matrices, 
     pos_lower = pos_x >  pos_y ? pos_x * N+pos_y : pos_y * N+pos_x;
 
     if(pos_x != pos_y) {
-      temp  = STEP_SIZE * (pcg32_boundedrand_r(&rng[n],2)?-1:1)*ldexp(pcg32_random_r(&rng[n]),-32)
-        + I * STEP_SIZE * (pcg32_boundedrand_r(&rng[n],2)?-1:1)*ldexp(pcg32_random_r(&rng[n]),-32);
+      temp  = step_size * (pcg32_boundedrand_r(&rng[n],2)?-1:1)*ldexp(pcg32_random_r(&rng[n]),-32)
+        + I * step_size * (pcg32_boundedrand_r(&rng[n],2)?-1:1)*ldexp(pcg32_random_r(&rng[n]),-32);
     } else {
-      temp  = STEP_SIZE * (pcg32_boundedrand_r(&rng[n],2)?-1:1)*ldexp(pcg32_random_r(&rng[n]),-32) + 0.0 * I;
+      temp  = step_size * (pcg32_boundedrand_r(&rng[n],2)?-1:1)*ldexp(pcg32_random_r(&rng[n]),-32) + 0.0 * I;
     }
     temp += Matrices[pos_upper+offset];
     if( creal( temp ) > MAX_ELEMENT || creal( temp ) < -MAX_ELEMENT ) continue;
@@ -292,6 +292,19 @@ void Get_Next_MCMC_Element(struct pcg32_random_t *rng, float complex *Matrices, 
     }
   }
 
+}
+
+
+void tune_step_size(
+    float acceptance_rate, // acceptance rate so far
+    float* step_size      // reference to step_size to be tuned
+    )
+{
+  // Assuming there is an ideal aceptance rate for Metropolis-Hastings,
+  // we want to decrease the step size if the measured rate is smaller than the ideal one and
+  // we want to increase the step size if the measured rate is larger  than the ideal one.
+  // We assume this rate to be 23%
+  *step_size *= acceptance_rate / 0.23;
 }
 
 
