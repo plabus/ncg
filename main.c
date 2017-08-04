@@ -12,6 +12,7 @@
 #include "Clifford.h"
 #include "Random.h"
 #include "MonteCarlo.h"
+#include "Actions.h"
 
 // Double escape in order to print
 // precision REAL as string
@@ -30,8 +31,6 @@ int main() {
   time_t now = time(0);
   strftime( buff, 100, "%Y-%m-%d %H:%M:%S", localtime(&now) );
 
-  double action;
-  double start_time;
   int start_sweep = 0;
   int rank, nproc;
   int NUM_H, NUM_L;
@@ -85,8 +84,10 @@ int main() {
 //                                                                 //
 /////////////////////////////////////////////////////////////////////
 
-  start_time = cclock();
-  Matrices_Initialisation(rngs, Matrices, &action, NUM_H, NUM_L);
+  double start_time = cclock();
+
+  Matrices_Initialisation(rngs, Matrices);
+  double action = G2 * traceD2(Matrices, NUM_H, NUM_L) + G4 * traceD4(Matrices, NUM_H, NUM_L);
 
   if(rank==0)
   {
@@ -108,7 +109,8 @@ int main() {
 
     fprintf(stdout, "  Type                             : (%d,%d)\n", P, Q);
     fprintf(stdout, "  Matrix Size N                    : %d\n", N);
-    fprintf(stdout, "  Action                           : S = Tr( %.1f * D^2 + %.1f * D^4 )\n\n", G2, G4);
+    fprintf(stdout, "  Action                           : S = Tr( %.1f * D^2 + %.1f * D^4 )\n", G2, G4);
+    fprintf(stdout, "  Initial value                    : S = %f\n\n", action);
 
     fprintf(stdout, "  Dimension                        : %d, (K = %d)\n", D, K);
     fprintf(stdout, "  Signature                        : %d\n", S);
@@ -126,37 +128,38 @@ int main() {
 //                                                                 //
 /////////////////////////////////////////////////////////////////////
 
-  int accepted     = 0;   // counter for total accepted steps
-  int accepted_old = 0;   // buffer to calculate accepted steps per sweep
-  double step_size  = 0.5; // initial step length
+  uint64_t accepted     = 0;   // counter for total accepted steps
+  uint64_t accepted_old = 0;   // buffer to calculate accepted steps per sweep
+  double step_size      = 0.1; // initial step length
 
-  for( int t = 0; t < CHAIN_LENGTH; ++t )
+  for( uint64_t t = 0; t < CHAIN_LENGTH; ++t )
   {
     // Generate new chain element
     Get_Next_MCMC_Element(rngs, Matrices, &action, SigmaAB, SigmaABCD, NUM_H, NUM_L, &accepted, step_size);
 
     // Print some diagnostics at each SWEEP
-    if( t % SWEEP == 0 && t != 0 )
+    if( t % (WRITEOUT_FREQ * SWEEP) == 0 && t != 0 )
     {
       // Get the time of date as string
       time_t now = time(0);
       strftime( buff, 100, "%Y-%m-%d %H:%M:%S", localtime(&now) );
 
       // Calculate number of accepts in last sweep, as well as
-      // the accumulated and recent (last sweep) acceptance rates,
+      // the accumulated and recent (last WRITEOUT_FREQ sweep) acceptance rates,
       // finally tune the step size according to recent acceptance
       // (Remember, we are counting accepts for each matrix and each step t)
-      int accepted_sweep    = accepted - accepted_old;
+      uint64_t accepted_sweep = accepted - accepted_old;
       double acc_rate_accum = (double) accepted / ( t * NUM_M );
-      double acc_rate_sweep = (double) accepted_sweep / ( SWEEP * NUM_M );
+      double acc_rate_sweep = (double) accepted_sweep / ( WRITEOUT_FREQ * SWEEP * NUM_M );
       accepted_old = accepted;
       tune_step_size( acc_rate_sweep, &step_size );
 
       fprintf(
           stdout,
           "  %s, rank %3d, sweep %5d, S = %.3f, \
-          acceptance = %4.2f%% (accumulated), acceptance = %4.2f%% (last sweep)\n",
-          buff, rank, t/SWEEP, action, 100.0*acc_rate_accum, 100.0*acc_rate_sweep
+          acceptance = %4.2f%% (accumulated), acceptance = %4.2f%% (last %d sweep)\n",
+          buff, rank, t/SWEEP, action, 100.0*acc_rate_accum, 100.0*acc_rate_sweep, WRITEOUT_FREQ
+          // "  %5d \t %.3f\n", t/SWEEP, action
           );
     }
   }

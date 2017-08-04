@@ -4,15 +4,16 @@
 #include "Random.h"
 #include "Constants.h"
 
+// Return random signed double in range (-1, 1) uniformly distributed
+double signed_uniform(
+    struct pcg32_random_t* rng // pointer to random number generator
+    );
+
 // Initialise each of the NUM_H + NUM_L matrices
-// randomly with elements in the range [-1-i, 1+i],
-// and calculate (and set) initialial action
+// randomly with elements in the range [-1-i, 1+i]
 void Matrices_Initialisation(
-    struct pcg32_random_t *rng,
-    REAL complex *Matrices,
-    double *action,
-    int NUM_H,
-    int NUM_L
+    struct pcg32_random_t *rng, // array of rng's, one for each matrix
+    REAL complex *Matrices      // array of matrices
     );
 
 // For each of the NUM_H + NUM_L matrices generate a new matrix
@@ -26,7 +27,7 @@ void Get_Next_MCMC_Element(
     int **sigmaABCD,
     int NUM_H,
     int NUM_L,
-    int *acc,
+    uint64_t *acc,
     double step_size
     );
 
