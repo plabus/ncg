@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <math.h>
 #include <complex.h>
+#include <inttypes.h>
 #include "Actions.h"
 #include "Constants.h"
 
@@ -175,39 +176,53 @@ double row_norm_squared(REAL complex *Matrices, int pos1, int pos_row) {
 
 double traceD2(REAL complex *Matrices, int NUM_H, int NUM_L)
 {
-  /* Calculating the action S = Tr D^2 */
-  int itimesN;
-  int Nplus1 = N+1;
-  int offset;
-  double trace_H2 = 0.f;
-  double trace_H = 0.f;
+  //
+  // Calculating the action S = Tr D^2
+  //
 
-  /* For the Tr H^2 part */
-  for(int n=0;n<NUM_M;++n) { /* This is for all matrices H and L */
-    offset = n*SWEEP;
-    for (int i=0;i<N;++i) {
-      itimesN = i*N;
-      for (int j=0;j<N;++j) {
+  uint64_t Nplus1 = N + 1;
+
+  // For the Tr H^2 part
+  // -------------------
+  double trace_H2 = 0.0;
+
+  for( uint64_t n = 0; n < NUM_M; ++n )  // This is for all matrices H and L
+  {
+    uint64_t offset = n * SWEEP;
+
+    for( uint64_t i = 0; i < N; ++i )
+    {
+      uint64_t itimesN = i * N;
+
+      for( uint64_t j = 0; j < N; ++j )
+      {
         trace_H2 += creal( Matrices[itimesN+j+offset] ) * creal( Matrices[itimesN+j+offset] );
         trace_H2 += cimag( Matrices[itimesN+j+offset] ) * cimag( Matrices[itimesN+j+offset] );
       }
     }
   }
 
-  /* For the (Tr H)^2 part */
-  for(int n=0;n<NUM_H;++n) { /* This is for matrices H only */
-    offset = n*SWEEP;
-    for (int i=0;i<N;++i) {
+  // For the (Tr H)^2 part
+  // ---------------------
+  double trace_H  = 0.0;
+
+  for( uint64_t n = 0; n < NUM_H; ++n )  // This is for matrices H only
+  {
+    uint64_t offset = n * SWEEP;
+
+    for( uint64_t i = 0; i < N; ++i )
+    {
       trace_H += creal( Matrices[i*Nplus1+offset] );
     }
   }
 
-  return 2*K*(N*trace_H2+trace_H*trace_H);
+  return 2 * K * ( N * trace_H2 + trace_H * trace_H );
 }
 
 
 double traceD4(REAL complex *Matrices, int NUM_H, int NUM_L)
 {
+  // TODO: Implement me!
   return 0;
 }
 
