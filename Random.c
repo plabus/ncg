@@ -1,5 +1,6 @@
 #include <ctype.h>
 #include <inttypes.h>
+#include <math.h>
 #include "Random.h"
 
 
@@ -45,4 +46,12 @@ inline uint32_t	pcg32_boundedrand_r(struct pcg32_random_t* rng, uint32_t bound)
     if (r >= threshold)
       return r % bound;
   }
+}
+
+// Return random signed double in range (-1, 1) uniformly distributed
+inline double signed_uniform(
+    struct pcg32_random_t* rng // pointer to random number generator
+    )
+{
+  return ( pcg32_boundedrand_r(rng, 2) ? -1 : 1 ) * ldexp( pcg32_random_r(rng), -32 );
 }

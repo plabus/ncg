@@ -7,13 +7,6 @@
 #include "Actions.h"
 #include "Constants.h"
 
-// Return random signed double in range (-1, 1) uniformly distributed
-inline double signed_uniform(
-    struct pcg32_random_t* rng // pointer to random number generator
-    )
-{
-  return ( pcg32_boundedrand_r(rng, 2) ? -1 : 1 ) * ldexp( pcg32_random_r(rng), -32 );
-}
 
 // Initialise a random HERMITIAN matrix of type H or type L (that is tracefree or
 // not), where the random elements lie in range [ -step_length_diag, step_length_diag ]
