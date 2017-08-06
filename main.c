@@ -86,8 +86,8 @@ int main() {
 
   double start_time = cclock();
 
-  Matrices_Initialisation(rngs, Matrices);
-  double action = G2 * traceD2(Matrices, NUM_H, NUM_L) + G4 * traceD4(Matrices, NUM_H, NUM_L);
+  double action = 0.0;
+  Matrices_Initialisation( rngs, Matrices, NUM_H, NUM_L, N, &action );
 
   if(rank==0)
   {
