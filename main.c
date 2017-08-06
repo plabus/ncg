@@ -132,17 +132,24 @@ int main() {
   uint64_t accepted_old = 0;   // buffer to calculate accepted steps per sweep
   double step_size      = 0.1; // initial step length
 
+    // Print some diagnostics each WRITEOUT_FREQ SWEEPs
+  fprintf(
+      stdout,
+      "  time \t rank \t sweep \t action S \t acceptance (accumulated) \t acceptance (last %d sweep)\n",
+      WRITEOUT_FREQ
+      );
+
   for( uint64_t t = 0; t < CHAIN_LENGTH; ++t )
   {
     // Generate new chain element
     Get_Next_MCMC_Element(rngs, Matrices, &action, SigmaAB, SigmaABCD, NUM_H, NUM_L, &accepted, step_size);
 
-    // Print some diagnostics at each SWEEP
+    // Print some diagnostics each WRITEOUT_FREQ SWEEPs
     if( t % (WRITEOUT_FREQ * SWEEP) == 0 && t != 0 )
     {
-      // Get the time of date as string
+      // Get the time of the day (hrs, min, sec) as string
       time_t now = time(0);
-      strftime( buff, 100, "%Y-%m-%d %H:%M:%S", localtime(&now) );
+      strftime( buff, 100, "%H:%M:%S", localtime(&now) );
 
       // Calculate number of accepts in last sweep, as well as
       // the accumulated and recent (last WRITEOUT_FREQ sweep) acceptance rates,
@@ -154,12 +161,11 @@ int main() {
       accepted_old = accepted;
       tune_step_size( acc_rate_sweep, &step_size );
 
+      // time, rank, sweep, action S, acceptance (accumulated), acceptance (last sweeps)
       fprintf(
           stdout,
-          "  %s, rank %3d, sweep %5d, S = %.3f, \
-          acceptance = %4.2f%% (accumulated), acceptance = %4.2f%% (last %d sweep)\n",
-          buff, rank, t/SWEEP, action, 100.0*acc_rate_accum, 100.0*acc_rate_sweep, WRITEOUT_FREQ
-          // "  %5d \t %.3f\n", t/SWEEP, action
+          "  %s \t %3d \t %5lu \t %.6f \t %4.2f \t %4.2f\n",
+          buff, rank, t/SWEEP, action, 100.0*acc_rate_accum, 100.0*acc_rate_sweep
           );
     }
   }
