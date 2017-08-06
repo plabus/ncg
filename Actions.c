@@ -174,53 +174,86 @@ double row_norm_squared(REAL complex *Matrices, int pos1, int pos_row) {
 
 /**********************************************************************************************/
 
-double traceD2(REAL complex *Matrices, int NUM_H, int NUM_L)
+// Calculate the trace of a matrix H
+double tr_H(
+    REAL complex const *Matrix,
+    int const length
+    )
 {
-  //
-  // Calculating the action S = Tr D^2
-  //
+  double complex trace = 0.0;
 
-  uint64_t Nplus1 = N + 1;
+  for( int i = 0; i < length; ++i )
+  {
+    trace += Matrix[i*length+i];
+  }
+
+  return creal(trace);
+}
+
+// Calculate the trace of a matrix H^2
+double tr_H2(
+    REAL complex const *Matrix,
+    int const length
+    )
+{
+  double complex trace = 0.0;
+
+  for( int i = 0; i < length; ++i )
+  {
+    for( int j = 0; j < length; ++j)
+    {
+      trace += Matrix[i*length+j] * conj( Matrix[i*length+j] );
+    }
+  }
+
+  return creal(trace);
+}
+
+/**********************************************************************************************/
+
+// Calculate the action Tr D^2
+double traceD2(
+    REAL complex const *Matrices, // Array of all matrices
+    int const num_h,              // number of matrices of H_TYPE
+    int const num_l,              // number of matrices of L_TYPE
+    int const length              // side length of all matrices
+    )
+{
+  //------------------------------------------------------//
+  // Calculating the action:                              //
+  // S = Tr D^2 = 2 k [ N \sum Tr(H^2) + \sum (Tr H)^2 ]  //
+  //------------------------------------------------------//
 
   // For the Tr H^2 part
   // -------------------
   double trace_H2 = 0.0;
 
-  for( uint64_t n = 0; n < NUM_M; ++n )  // This is for all matrices H and L
+  for( uint64_t n = 0; n < num_h + num_l; ++n )  // This is for all matrices H and L
   {
-    uint64_t offset = n * SWEEP;
-
-    for( uint64_t i = 0; i < N; ++i )
-    {
-      uint64_t itimesN = i * N;
-
-      for( uint64_t j = 0; j < N; ++j )
-      {
-        trace_H2 += creal( Matrices[itimesN+j+offset] ) * creal( Matrices[itimesN+j+offset] );
-        trace_H2 += cimag( Matrices[itimesN+j+offset] ) * cimag( Matrices[itimesN+j+offset] );
-      }
-    }
+    uint64_t const offset = n * SWEEP;
+    trace_H2 += tr_H2( &Matrices[offset], length );
   }
 
   // For the (Tr H)^2 part
   // ---------------------
   double trace_H  = 0.0;
 
-  for( uint64_t n = 0; n < NUM_H; ++n )  // This is for matrices H only
+  for( uint64_t n = 0; n < num_h; ++n )  // This is for matrices H only
   {
-    uint64_t offset = n * SWEEP;
-
-    for( uint64_t i = 0; i < N; ++i )
-    {
-      trace_H += creal( Matrices[i*Nplus1+offset] );
-    }
+    uint64_t const offset = n * SWEEP;
+    trace_H += tr_H( &Matrices[offset], length );
   }
 
   return 2 * K * ( N * trace_H2 + trace_H * trace_H );
 }
 
 
-double traceD4(REAL complex *Matrices, int NUM_H, int NUM_L)
+double traceD4(
+    REAL complex const *Matrices, // Array of all matrices
+    int const num_h,              // number of matrices of H_TYPE
+    int const num_l,              // number of matrices of L_TYPE
+    int const length              // side length of all matrices
+    )
 {
   // TODO: Implement me!
   return 0;
@@ -234,52 +267,46 @@ double traceD4(REAL complex *Matrices, int NUM_H, int NUM_L)
 /********                                                                *********/
 /*********************************************************************************/
 
-double delta_action_traceD2(REAL complex *Matrices, int position, REAL complex temp, int pos_x, int pos_y, int NUM_H, int NUM_L)
+// Calculate the change of the action S = Tr D^2,
+// if in one matrix one element is changed (temp),
+// the matrix is in its unchanged state
+double deltaS_traceD2(
+    REAL complex const *Matrix, // pointer to matrix for which one element will be changed
+    int const length,           // side length of all matrices
+    REAL complex const temp,    // newly proposed element
+    int const pos_x,            // first index of position (the smaller one is i)
+    int const pos_y,            // second index of position (the smaller one is i)
+    enum Matrix_Type const type // H or L? Non-traceless or traceless?
+    )
 {
+  int const pos_upper = pos_x <= pos_y ? pos_x * length + pos_y : pos_y * length + pos_x;
 
-  double delta;
-  double trace_new, trace_old;
-  int pos_upper = pos_x<=pos_y ? pos_x*N+pos_y : pos_y*N+pos_x;
-  int offset = position*SWEEP;
-
-  /* Generate a real number for diagonal element or else a complex number in upper half */
-  if (pos_x == pos_y) /* DIAGONAL CASE */
+  if( type == H_TYPE ) // H_TYPE
   {
-
-    if(position<NUM_H) /* Case of the matrices H */
+    if( pos_x == pos_y ) // diagonal case
     {
-      trace_old = 0.f;
-
-      for(int l=0;l<N;++l)
-      {
-        trace_old += creal( Matrices[l*N+l+offset] );
-      }
-
-      trace_new = trace_old - creal( Matrices[pos_upper+offset] ) + creal(temp);
-
-#ifdef LARGE_N
-      delta = 2 * K * N * ( creal(temp) * creal(temp) - creal( Matrices[pos_upper+offset] ) * creal( Matrices[pos_upper+offset] ) );
-#else
-      delta = 2 * K * N * ( creal(temp) * creal(temp) - creal( Matrices[pos_upper+offset] ) * creal( Matrices[pos_upper+offset] ) ) +
-              2 * K * ( trace_new*trace_new - trace_old*trace_old );
-#endif
+      double const tr_H_old = tr_H(Matrix, length);
+      return 2 * K * (
+          2 * creal(temp) * ( length * creal(Matrix[pos_upper]) + tr_H_old )
+          + cabs(temp) * cabs(temp) * ( length + 1 )
+          );
     }
-    else /* Case of the traceless matrices L */
+    else // off-diagonal case
     {
-      delta = 2 * K * N * ( creal(temp) * creal(temp) - creal( Matrices[pos_upper+offset] ) * creal( Matrices[pos_upper+offset] ) );
+      return 4 * K * length * ( 2 * creal( temp * conj(Matrix[pos_upper]) ) + cabs(temp) * cabs(temp) );
     }
-
   }
-  else /* OFF-DIAGONAL CASE */
+  else // L_TYPE
   {
-    /* If an off-diagonal element is changed the trace remains the same, *
-     * which implies that the two cases for H and L are the same.        */
-    delta = 4 * K * N * ( creal(temp) * creal(temp) + cimag(temp) * cimag(temp)
-        - creal( Matrices[pos_upper+offset] ) * creal( Matrices[pos_upper+offset] )
-        - cimag( Matrices[pos_upper+offset] ) * creal( Matrices[pos_upper+offset] ) );
+    if( pos_x == pos_y ) // diagonal case
+    {
+      return 2 * K * length * ( 2 * creal( temp * conj(Matrix[pos_upper]) ) + cabs(temp) * cabs(temp) );
+    }
+    else // off-diagonal case
+    {
+      return 4 * K * length * ( 2 * creal( temp * conj(Matrix[pos_upper]) ) + cabs(temp) * cabs(temp) );
+    }
   }
-
-  return delta;
 }
 
 

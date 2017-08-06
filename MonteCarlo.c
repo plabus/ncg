@@ -95,7 +95,7 @@ void Matrices_Initialisation(
   random_matrices( rng, Matrices, num_h, num_l, length, 1.0, 1.0, 1.0, 1.0 );
 
   // Calculate the inital action
-  *action = G2 * traceD2( Matrices, num_h, num_l ) + G4 * traceD4( Matrices, num_h, num_l );
+  *action = G2 * traceD2( Matrices, num_h, num_l, length ) + G4 * traceD4( Matrices, num_h, num_l, length );
 }
 
 
@@ -151,7 +151,7 @@ void Get_Next_MCMC_Element(
       Matrices[pos_upper+offset] = temp;
     }
 
-    double action_new = traceD2(Matrices, NUM_H, NUM_L);
+    double action_new = traceD2(Matrices, NUM_H, NUM_L, N);
     double delta_action = action_new - (*action);
 
     /* Finally test if new action is smaller or except randomly if exp supressed, *
