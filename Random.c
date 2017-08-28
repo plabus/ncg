@@ -48,10 +48,27 @@ inline uint32_t	pcg32_boundedrand_r(struct pcg32_random_t* rng, uint32_t bound)
   }
 }
 
+// Return random unsigned double in range [0, 1) uniformly distributed
+inline double uniform(
+    struct pcg32_random_t* rng // pointer to random number generator
+    )
+{
+  return ldexp( pcg32_random_r(rng), -32 );
+}
+
+// Return random uniformly distributed int in range [0, N)
+inline int uniform_int(
+    struct pcg32_random_t* rng, // pointer to random number generator
+    const int upper
+    )
+{
+  return pcg32_boundedrand_r( rng, upper );
+}
+
 // Return random signed double in range (-1, 1) uniformly distributed
 inline double signed_uniform(
     struct pcg32_random_t* rng // pointer to random number generator
     )
 {
-  return ( pcg32_boundedrand_r(rng, 2) ? -1 : 1 ) * ldexp( pcg32_random_r(rng), -32 );
+  return ( uniform_int(rng, 2) ? -1 : 1 ) * uniform( rng );
 }

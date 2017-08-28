@@ -15,6 +15,17 @@ void pcg32_srandom_r(struct pcg32_random_t* rng, uint64_t initstate, uint64_t in
 uint32_t pcg32_random_r(struct pcg32_random_t* rng);
 uint32_t pcg32_boundedrand_r(struct pcg32_random_t* rng, uint32_t bound);
 
+// Return random unsigned double in range [0, 1) uniformly distributed
+double uniform(
+    struct pcg32_random_t* rng // pointer to random number generator
+    );
+
+// Return random uniformly distributed int in range [0, N)
+int uniform_int(
+    struct pcg32_random_t* rng, // pointer to random number generator
+    const int upper
+    );
+
 // Return random signed double in range (-1, 1) uniformly distributed
 double signed_uniform(
     struct pcg32_random_t* rng // pointer to random number generator
