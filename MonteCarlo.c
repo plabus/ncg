@@ -101,47 +101,42 @@ void Matrices_Initialisation(
 
 // Creates a new Markov chain element
 void Get_Next_MCMC_Element(
-    struct pcg32_random_t *rng,
-    REAL complex *Matrices,
-    double *action,
-    int *sigmaAB,
-    int **sigmaABCD,
-    int NUM_H,
-    int NUM_L,
-    uint64_t* acc,
-    double step_size
+    struct pcg32_random_t *rng, // array of rng's, one for each matrix
+    REAL complex *Matrices,     // array of matrices
+    double *action,             // pointer to the value of the action of the matrices
+    int *sigmaAB,               // precalculated Clifford products of 2 Gamma matrices
+    int **sigmaABCD,            // precalculated Clifford products of 4 Gamma matrices
+    const int NUM_H,            // number of matrices of H_TYPE
+    const int NUM_L,            // number of matrices of L_TYPE
+    uint64_t* acc,              // pointer to number of accepted steps
+    const double step_size      // length of each Monte Carlo step
     )
 {
-  int pos_x, pos_y;
-  int pos_upper, pos_lower;
-  double p;                 // Random double for accepting MC elemement
   REAL complex temp;       // To save random value that is changed
-  REAL complex old;
 
   /* For each Matrix change a value in the upper triangle randomly *
    * calculate the the change of the action and finally decide if  *
    * the new matrix should be accepted.                            */
-  for(int n=0;n<NUM_M;++n)
+  for( int n = 0; n < NUM_M; ++n )
   {
     /* Set the offset to write to the right matrix */
-    int offset = n * SWEEP;
+    const int offset = n * SWEEP;
 
     /* Calculate random double in [0,1) for Monte Carlo Move Decision */
-    p = ldexp(pcg32_random_r(&rng[n]),-32);
+    const double p = uniform( &rng[n] );
 
     /* Calculate two random integers and generate position in upper and lower half */
-    pos_x = pcg32_boundedrand_r(&rng[n],N);
-    pos_y = pcg32_boundedrand_r(&rng[n],N);
-    pos_upper = pos_x <= pos_y ? pos_x * N+pos_y : pos_y * N+pos_x;
-    pos_lower = pos_x >  pos_y ? pos_x * N+pos_y : pos_y * N+pos_x;
+    const int pos_x = uniform_int( &rng[n], N );
+    const int pos_y = uniform_int( &rng[n], N );
+    const int pos_upper = pos_x <= pos_y ? pos_x * N+pos_y : pos_y * N+pos_x;
+    const int pos_lower = pos_x >  pos_y ? pos_x * N+pos_y : pos_y * N+pos_x;
 
-    old = Matrices[pos_upper+offset];
+    const REAL complex old = Matrices[pos_upper+offset];
 
     if(pos_x != pos_y) {
-      temp  = step_size * (pcg32_boundedrand_r(&rng[n],2)?-1:1)*ldexp(pcg32_random_r(&rng[n]),-32)
-        + I * step_size * (pcg32_boundedrand_r(&rng[n],2)?-1:1)*ldexp(pcg32_random_r(&rng[n]),-32);
+      temp  = step_size * signed_uniform( &rng[n] ) + I * step_size * signed_uniform( &rng[n] );
     } else {
-      temp  = step_size * (pcg32_boundedrand_r(&rng[n],2)?-1:1)*ldexp(pcg32_random_r(&rng[n]),-32) + 0.0 * I;
+      temp  = step_size * signed_uniform( &rng[n] );
     }
 
     if(pos_x != pos_y) {

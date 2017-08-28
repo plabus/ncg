@@ -58,15 +58,15 @@ void Matrices_Initialisation(
 // with exactly one entry changed and make a accept/reject step
 // individually. The acceptance counter is update for each matrix
 void Get_Next_MCMC_Element(
-    struct pcg32_random_t *rng,
-    REAL complex *Matrices,
-    double *action,
-    int *sigmaAB,
-    int **sigmaABCD,
-    int NUM_H,
-    int NUM_L,
-    uint64_t *acc,
-    double step_size
+    struct pcg32_random_t *rng, // array of rng's, one for each matrix
+    REAL complex *Matrices,     // array of matrices
+    double *action,             // pointer to the value of the action of the matrices
+    int *sigmaAB,               // precalculated Clifford products of 2 Gamma matrices
+    int **sigmaABCD,            // precalculated Clifford products of 4 Gamma matrices
+    const int NUM_H,            // number of matrices of H_TYPE
+    const int NUM_L,            // number of matrices of L_TYPE
+    uint64_t* acc,              // pointer to number of accepted steps
+    const double step_size      // length of each Monte Carlo step
     );
 
 // Tune the step size based on some acceptance rate measured
