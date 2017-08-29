@@ -7,10 +7,9 @@
 #include "Actions.h"
 #include "Constants.h"
 
-
-// Initialise a random HERMITIAN matrix of type H or type L (that is tracefree or
-// not), where the random elements lie in range [ -step_length_diag, step_length_diag ]
-// on the diagonal and in [ -step_length_off*(1+i), spep_length_off*(1+i) ] for
+// Initialise a random HERMITIAN matrix of type H or type L (that is tracefree or not),
+// where the random elements lie in range [ -step_length_diag, step_length_diag ]
+// on the diagonal and in [ -step_length_off*(1+i), step_length_off*(1+i) ] for
 // the off-diagonal elements
 void random_matrix(
     struct pcg32_random_t* rng,    // pointer to random number generator
@@ -81,105 +80,156 @@ void random_matrices(
   }
 }
 
-// Initialise all Matrices for the MCMC, and calculate the initial action
-void Matrices_Initialisation(
+// Initialise all Matrices for the MCMC, and return the initial action
+double Matrices_Initialisation(
     struct pcg32_random_t *rng, // array of rng's, one for each matrix
     REAL complex *Matrices,     // array of matrices
     int const num_h,            // number of matrices of H_TYPE
     int const num_l,            // number of matrices of L_TYPE
-    int const length,           // side length N (the same for all matrices)
-    double* action              // pointer to the action variable
+    int const length            // side length N (the same for all matrices)
     )
 {
   // Set high-temperature initial state for all  matrices, where random elements are in the range [-1-i, 1+i]
   random_matrices( rng, Matrices, num_h, num_l, length, 1.0, 1.0, 1.0, 1.0 );
 
-  // Calculate the inital action
-  *action = G2 * traceD2( Matrices, num_h, num_l, length ) + G4 * traceD4( Matrices, num_h, num_l, length );
+  // Calculate the initial action
+  const double action = G2 * traceD2( Matrices, num_h, num_l, length )
+                      + G4 * traceD4( Matrices, num_h, num_l, length );
+  return action;
 }
 
-
-// Creates a new Markov chain element
-void Get_Next_MCMC_Element(
-    struct pcg32_random_t *rng, // array of rng's, one for each matrix
+// Generate a new Monte Carlo candidate by changing one matrix element in one matrix
+struct Matrix_State Generate_Candidate(
+    struct pcg32_random_t *rng, // pointer to one rng
     REAL complex *Matrices,     // array of matrices
-    double *action,             // pointer to the value of the action of the matrices
-    int *sigmaAB,               // precalculated Clifford products of 2 Gamma matrices
-    int **sigmaABCD,            // precalculated Clifford products of 4 Gamma matrices
-    const int NUM_H,            // number of matrices of H_TYPE
-    const int NUM_L,            // number of matrices of L_TYPE
-    uint64_t* acc,              // pointer to number of accepted steps
-    const double step_size      // length of each Monte Carlo step
+    const int length,           // side length N of one matrix in Matrices (the same for all matrices)
+    const double step_size,     // length of each Monte Carlo step
+    const int matrix            // in which matrix an element should be changed
     )
 {
-  REAL complex temp;       // To save random value that is changed
+  // Generate position of change and save old element:
+  // -------------------------------------------------
 
-  /* For each Matrix change a value in the upper triangle randomly *
-   * calculate the the change of the action and finally decide if  *
-   * the new matrix should be accepted.                            */
-  for( int n = 0; n < NUM_M; ++n )
+  // Set the offset to write to the right matrix
+  const int offset = matrix * length * length;
+
+  // Calculate two random integers and generate position in upper and lower half
+  const int pos_x = uniform_int( rng, length );
+  const int pos_y = uniform_int( rng, length );
+  const int pos_upper = pos_x <= pos_y ? pos_x * length + pos_y : pos_y * length + pos_x;
+  const int pos_lower = pos_x >  pos_y ? pos_x * length + pos_y : pos_y * length + pos_x;
+
+  // Save the old value
+  const REAL complex old_element = Matrices[ offset + pos_upper ];
+  const struct Matrix_State old_state = {
+    .matrix = matrix,
+    .pos_upper = pos_upper,
+    .pos_lower = pos_lower,
+    .matrix_element = old_element
+  };
+
+  // Generate new matrix element:
+  // ----------------------------
+
+  REAL complex temp;
+
+  // Off-diagonal case
+  if(pos_upper != pos_lower)
   {
-    /* Set the offset to write to the right matrix */
-    const int offset = n * SWEEP;
+    temp = step_size * signed_uniform( rng ) + I * step_size * signed_uniform( rng );
+    Matrices[ offset + pos_upper ] += temp;
+    Matrices[ offset + pos_lower ] += conj(temp);
+  }
+  // Diagonal case
+  else
+  {
+    temp = step_size * signed_uniform( rng );
+    Matrices[ offset + pos_upper ] += temp;
+  }
 
-    /* Calculate random double in [0,1) for Monte Carlo Move Decision */
-    const double p = uniform( &rng[n] );
+  return old_state;
+}
 
-    /* Calculate two random integers and generate position in upper and lower half */
-    const int pos_x = uniform_int( &rng[n], N );
-    const int pos_y = uniform_int( &rng[n], N );
-    const int pos_upper = pos_x <= pos_y ? pos_x * N+pos_y : pos_y * N+pos_x;
-    const int pos_lower = pos_x >  pos_y ? pos_x * N+pos_y : pos_y * N+pos_x;
+// Restore the Matrices as they have been before using Generate_Candidate
+void Restore_Matrices(
+    REAL complex *Matrices,        // array of matrices
+    const int length,              // side length N of one matrix in Matrices (the same for all matrices)
+    const struct Matrix_State old  // old state
+    )
+{
+  // Set the offset to write to the right matrix
+  const int offset = old.matrix * length * length;
 
-    const REAL complex old = Matrices[pos_upper+offset];
+  // Off-diagonal case
+  if(old.pos_upper != old.pos_lower)
+  {
+    Matrices[ old.pos_upper + offset ] = old.matrix_element;
+    Matrices[ old.pos_lower + offset ] = conj(old.matrix_element);
+  }
+  // Diagonal case
+  else
+  {
+    Matrices[ old.pos_upper + offset ] = old.matrix_element;
+  }
+}
 
-    if(pos_x != pos_y) {
-      temp  = step_size * signed_uniform( &rng[n] ) + I * step_size * signed_uniform( &rng[n] );
-    } else {
-      temp  = step_size * signed_uniform( &rng[n] );
-    }
+// Creates a new Markov chain element
+double Get_Next_MCMC_Element(
+    struct pcg32_random_t *rng, // array of rng's, one for each matrix
+    REAL complex *Matrices,     // array of matrices
+    const int num_h,            // number of matrices of H_TYPE
+    const int num_l,            // number of matrices of L_TYPE
+    const int length,           // side length N of one matrix in Matrices (the same for all matrices)
+    int *sigmaAB,               // pre-calculated Clifford products of 2 Gamma matrices
+    int **sigmaABCD,            // pre-calculated Clifford products of 4 Gamma matrices
+    uint64_t* accepted,         // pointer to number of accepted steps
+    const double step_size,     // length of each Monte Carlo step
+    double action               // old value of the action
+    )
+{
+  // For each matrix, separately generate a new candidate,
+  // calculate the resulting action and perform a Monte Carlo step
+  for( size_t number_matrix = 0; number_matrix < num_h + num_l; ++number_matrix )
+  {
 
-    if(pos_x != pos_y) {
-      Matrices[pos_upper+offset] = temp;
-      Matrices[pos_lower+offset] = conj(temp);
-    } else {
-      Matrices[pos_upper+offset] = temp;
-    }
+    // Generate new candidate and calculate new action:
+    // ------------------------------------------------
 
-    double action_new = traceD2(Matrices, NUM_H, NUM_L, N);
-    double delta_action = action_new - (*action);
+    const struct Matrix_State old = Generate_Candidate(
+        &rng[number_matrix], Matrices, length, step_size, number_matrix
+        );
+    const double action_new   = traceD2(Matrices, num_h, num_l, length);
+    const double delta_action = action_new - action;
 
-    /* Finally test if new action is smaller or except randomly if exp supressed, *
-     * if yes write new element in upper and lower half and copy new eigenvalues  */
-    // fprintf( stdout, "  deltaS = %f, p = %f, ", delta_action, p );
-    if( delta_action<=0.0 || exp(-delta_action) > p )
+
+    // Monte Carlo Move decision:
+    // --------------------------
+
+    const double p = uniform( &rng[number_matrix] );
+
+    // accept
+    if( delta_action <= 0.0 || exp(-delta_action) > p )
     {
-      // accepted
-      *acc += 1;
-      *action = (*action) + delta_action;
+      *accepted += 1;
+      action = action_new;
     }
+    // reject
     else
     {
-      // rejected
-      if(pos_x != pos_y) {
-        Matrices[pos_upper+offset] = old;
-        Matrices[pos_lower+offset] = conj(old);
-      } else {
-        Matrices[pos_upper+offset] = old;
-      }
+      Restore_Matrices( Matrices, length, old );
     }
 
   }
-
+  return action;
 }
 
 
 void tune_step_size(
     double acceptance_rate, // acceptance rate so far
-    double* step_size      // reference to step_size to be tuned
+    double* step_size       // reference to step_size to be tuned
     )
 {
-  // Assuming there is an ideal aceptance rate for Metropolis-Hastings,
+  // Assuming there is an ideal acceptance rate for Metropolis-Hastings,
   // we want to decrease the step size if the measured rate is smaller than the ideal one and
   // we want to increase the step size if the measured rate is larger  than the ideal one.
   // We assume this rate to be 23%

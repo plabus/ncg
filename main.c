@@ -86,8 +86,7 @@ int main() {
 
   double start_time = cclock();
 
-  double action = 0.0;
-  Matrices_Initialisation( rngs, Matrices, NUM_H, NUM_L, N, &action );
+  double action = Matrices_Initialisation( rngs, Matrices, NUM_H, NUM_L, N );
 
   if(rank==0)
   {
@@ -132,20 +131,22 @@ int main() {
   uint64_t accepted_old = 0;   // buffer to calculate accepted steps per sweep
   double step_size      = 0.1; // initial step length
 
-    // Print some diagnostics each WRITEOUT_FREQ SWEEPs
+  // Print some diagnostics each WRITEOUT_FREQ SWEEPs
   fprintf(
       stdout,
       "  time \t rank \t sweep \t action S \t acceptance (accumulated) \t acceptance (last %d sweep)\n",
-      WRITEOUT_FREQ
+      WRITEOUT_FREQ/SWEEP
       );
 
   for( uint64_t t = 0; t < CHAIN_LENGTH; ++t )
   {
     // Generate new chain element
-    Get_Next_MCMC_Element(rngs, Matrices, &action, SigmaAB, SigmaABCD, NUM_H, NUM_L, &accepted, step_size);
+    action = Get_Next_MCMC_Element(
+        rngs, Matrices, NUM_H, NUM_L, N, SigmaAB, SigmaABCD, &accepted, step_size, action
+        );
 
     // Print some diagnostics each WRITEOUT_FREQ SWEEPs
-    if( t % (WRITEOUT_FREQ * SWEEP) == 0 && t != 0 )
+    if( t % WRITEOUT_FREQ == 0 && t != 0 )
     {
       // Get the time of the day (hrs, min, sec) as string
       time_t now = time(0);
@@ -157,7 +158,7 @@ int main() {
       // (Remember, we are counting accepts for each matrix and each step t)
       uint64_t accepted_sweep = accepted - accepted_old;
       double acc_rate_accum = (double) accepted / ( t * NUM_M );
-      double acc_rate_sweep = (double) accepted_sweep / ( WRITEOUT_FREQ * SWEEP * NUM_M );
+      double acc_rate_sweep = (double) accepted_sweep / ( WRITEOUT_FREQ * NUM_M );
       accepted_old = accepted;
       tune_step_size( acc_rate_sweep, &step_size );
 

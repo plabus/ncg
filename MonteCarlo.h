@@ -9,6 +9,15 @@
 // L_TYPE is trace-free
 enum Matrix_Type { H_TYPE, L_TYPE };
 
+// This is used to save a state of matrices
+// when using an ultra-local update
+struct Matrix_State
+{
+  size_t matrix;
+  size_t pos_upper;
+  size_t pos_lower;
+  REAL matrix_element;
+};
 
 // Return random signed double in range (-1, 1) uniformly distributed
 double signed_uniform(
@@ -17,7 +26,7 @@ double signed_uniform(
 
 // Initialise a random HERMITIAN matrix of type H or type L (that is tracefree or
 // not), where the random elements lie in range [ -step_length_diag, step_length_diag ]
-// on the diagonal and in [ -step_length_off*(1+i), spep_length_off*(1+i) ] for
+// on the diagonal and in [ -step_length_off*(1+i), step_length_off*(1+i) ] for
 // the off-diagonal elements
 void random_matrix(
     struct pcg32_random_t* rng,    // pointer to random number generator
@@ -44,29 +53,45 @@ void random_matrices(
     double const step_length_off_l   // range of off-diagonal elements for matrix H_TYPE
     );
 
-// Initialise all Matrices for the MCMC, and calculate the initial action
-void Matrices_Initialisation(
+// Initialise all Matrices for the MCMC, and return the initial action
+double Matrices_Initialisation(
     struct pcg32_random_t *rng, // array of rng's, one for each matrix
     REAL complex *Matrices,     // array of matrices
     int const num_h,            // number of matrices of H_TYPE
     int const num_l,            // number of matrices of L_TYPE
-    int const length,           // side length N (the same for all matrices)
-    double* action              // pointer to the action variable
+    int const length            // side length N (the same for all matrices)
+    );
+
+// Generate a new Monte Carlo candidate by changing one matrix element in one matrix
+struct Matrix_State Generate_Candidate(
+    struct pcg32_random_t *rng, // pointer to one rng
+    REAL complex *Matrices,     // array of matrices
+    int const length,           // side length N of one matrix in Matrices (the same for all matrices)
+    const double step_size,     // length of each Monte Carlo step
+    int const matrix            // in which matrix an element should be changed
+    );
+
+// Restore the Matrices as they have been before using Generate_Candidate
+void Restore_Matrices(
+    REAL complex *Matrices,        // array of matrices
+    int const length,              // side length N of one matrix in Matrices (the same for all matrices)
+    const struct Matrix_State old  // old state with changed position and value
     );
 
 // For each of the NUM_H + NUM_L matrices generate a new matrix
 // with exactly one entry changed and make a accept/reject step
 // individually. The acceptance counter is update for each matrix
-void Get_Next_MCMC_Element(
+double Get_Next_MCMC_Element(
     struct pcg32_random_t *rng, // array of rng's, one for each matrix
     REAL complex *Matrices,     // array of matrices
-    double *action,             // pointer to the value of the action of the matrices
-    int *sigmaAB,               // precalculated Clifford products of 2 Gamma matrices
-    int **sigmaABCD,            // precalculated Clifford products of 4 Gamma matrices
-    const int NUM_H,            // number of matrices of H_TYPE
-    const int NUM_L,            // number of matrices of L_TYPE
-    uint64_t* acc,              // pointer to number of accepted steps
-    const double step_size      // length of each Monte Carlo step
+    const int num_h,            // number of matrices of H_TYPE
+    const int num_l,            // number of matrices of L_TYPE
+    int const length,           // side length N of one matrix in Matrices (the same for all matrices)
+    int *sigmaAB,               // pre-calculated Clifford products of 2 Gamma matrices
+    int **sigmaABCD,            // pre-calculated Clifford products of 4 Gamma matrices
+    uint64_t* accepted,         // pointer to number of accepted steps
+    const double step_size,     // length of each Monte Carlo step
+    double action               // old value of the action
     );
 
 // Tune the step size based on some acceptance rate measured
