@@ -16,7 +16,7 @@ struct Matrix_State
   size_t matrix;
   size_t pos_upper;
   size_t pos_lower;
-  REAL matrix_element;
+  REAL complex matrix_element;
 };
 
 // Return random signed double in range (-1, 1) uniformly distributed
@@ -81,7 +81,7 @@ void Restore_Matrices(
 // For each of the NUM_H + NUM_L matrices generate a new matrix
 // with exactly one entry changed and make a accept/reject step
 // individually. The acceptance counter is update for each matrix
-double Get_Next_MCMC_Element(
+void Get_Next_MCMC_Element(
     struct pcg32_random_t *rng, // array of rng's, one for each matrix
     REAL complex *Matrices,     // array of matrices
     const int num_h,            // number of matrices of H_TYPE
@@ -90,8 +90,7 @@ double Get_Next_MCMC_Element(
     int *sigmaAB,               // pre-calculated Clifford products of 2 Gamma matrices
     int **sigmaABCD,            // pre-calculated Clifford products of 4 Gamma matrices
     uint64_t* accepted,         // pointer to number of accepted steps
-    const double step_size,     // length of each Monte Carlo step
-    double action               // old value of the action
+    const double step_size      // length of each Monte Carlo step
     );
 
 // Tune the step size based on some acceptance rate measured

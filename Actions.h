@@ -17,13 +17,13 @@ double row_norm_squared(REAL complex *Matrices, int pos1, int pos_row);
 // Calculate the trace of a matrix H
 double tr_H(
     REAL complex const *Matrix,
-    int const length
+    uint64_t const length
     );
 
 // Calculate the trace of a matrix H^2
 double tr_H2(
     REAL complex const *Matrix,
-    int const length
+    uint64_t const length
     );
 
 // Calculate the action Tr D^2
@@ -31,7 +31,7 @@ double traceD2(
     REAL complex const *Matrices, // Array of all matrices
     int const num_h,              // number of matrices of H_TYPE
     int const num_l,              // number of matrices of L_TYPE
-    int const length              // side length of all matrices
+    uint64_t const length              // side length of all matrices
     );
 
 // Calculate the action Tr D^4
@@ -43,15 +43,14 @@ double traceD4(
     );
 
 // Calculate the change of the action S = Tr D^2,
-// if in one matrix one element is changed (temp),
-// the matrix is in its unchanged state
+// if in one matrix one element is changed (t),
+// where the matrix is in its already changed state
 double deltaS_traceD2(
-    REAL complex const *Matrix, // pointer to matrix for which one element will be changed
-    int const length,           // side length of all matrices
-    REAL complex const temp,    // newly proposed element
-    int const pos_x,            // first index of position (the smaller one is i)
-    int const pos_y,            // second index of position (the smaller one is i)
-    enum Matrix_Type const type // H or L? Non-traceless or traceless?
+    REAL complex *Matrices,        // array of matrices
+    const int num_h,               // number of matrices of H_TYPE
+    const int num_l,               // number of matrices of L_TYPE
+    const int length,              // side length N of one matrix in Matrices (the same for all matrices)
+    const struct Matrix_State old  // old state
     );
 
 double delta_action_traceD4(REAL complex *Matrices, int positionA, REAL complex temp, int pos_x, int pos_y, int *sigmaAB, int **sigmaABCD, int NUM_H, int NUM_L);

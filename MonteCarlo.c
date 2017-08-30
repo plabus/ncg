@@ -143,7 +143,9 @@ struct Matrix_State Generate_Candidate(
   // Diagonal case
   else
   {
-    temp = step_size * signed_uniform( rng );
+    // FIXME: Shall we ensure here that L's remain trace-less?
+    // (This is however used when evaluating S and deltaS)
+    temp = step_size * signed_uniform( rng ) + I * 0.0;
     Matrices[ offset + pos_upper ] += temp;
   }
 
@@ -174,7 +176,7 @@ void Restore_Matrices(
 }
 
 // Creates a new Markov chain element
-double Get_Next_MCMC_Element(
+void Get_Next_MCMC_Element(
     struct pcg32_random_t *rng, // array of rng's, one for each matrix
     REAL complex *Matrices,     // array of matrices
     const int num_h,            // number of matrices of H_TYPE
@@ -183,8 +185,7 @@ double Get_Next_MCMC_Element(
     int *sigmaAB,               // pre-calculated Clifford products of 2 Gamma matrices
     int **sigmaABCD,            // pre-calculated Clifford products of 4 Gamma matrices
     uint64_t* accepted,         // pointer to number of accepted steps
-    const double step_size,     // length of each Monte Carlo step
-    double action               // old value of the action
+    const double step_size      // length of each Monte Carlo step
     )
 {
   // For each matrix, separately generate a new candidate,
@@ -195,14 +196,15 @@ double Get_Next_MCMC_Element(
     // Generate new candidate and calculate new action:
     // ------------------------------------------------
 
-    const struct Matrix_State old = Generate_Candidate(
-        &rng[number_matrix], Matrices, length, step_size, number_matrix
-        );
-    const double action_new   = traceD2(Matrices, num_h, num_l, length);
-    const double delta_action = action_new - action;
+    // const double action_old = traceD2( Matrices, num_h, num_l, length );
+    const struct Matrix_State old =
+      Generate_Candidate( &rng[number_matrix], Matrices, length, step_size, number_matrix );
+    // const double action_new = traceD2( Matrices, num_h, num_l, length );
+    // const double delta_action = action_new - action_old;
+    const double delta_action = deltaS_traceD2( Matrices, num_h, num_l, length, old );
 
 
-    // Monte Carlo Move decision:
+    // Monte Carlo move decision:
     // --------------------------
 
     const double p = uniform( &rng[number_matrix] );
@@ -211,7 +213,6 @@ double Get_Next_MCMC_Element(
     if( delta_action <= 0.0 || exp(-delta_action) > p )
     {
       *accepted += 1;
-      action = action_new;
     }
     // reject
     else
@@ -220,7 +221,6 @@ double Get_Next_MCMC_Element(
     }
 
   }
-  return action;
 }
 
 
