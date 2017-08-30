@@ -24,11 +24,11 @@ void printMint(int *matrix, int n) {
 void printMcomplex(float complex *matrix, int n) {
   for(int i=0;i<n;++i) {
     for(int j=0;j<n;++j) {
-      if( abs(creal(matrix[i*n+j]))<1e-3 && abs(cimag(matrix[i*n+j]))<1e-3 ) printf("  0");
-      else if( abs(creal(matrix[i*n+j])-1.)<1e-3 && abs(cimag(matrix[i*n+j]))<1e-3 ) printf("  1");
-      else if( abs(creal(matrix[i*n+j])+1.)<1e-3 && abs(cimag(matrix[i*n+j]))<1e-3 ) printf(" -1");
-      else if( abs(creal(matrix[i*n+j]))<1e-3 && abs(cimag(matrix[i*n+j])-1.)<1e-3 ) printf("  i");
-      else if( abs(creal(matrix[i*n+j]))<1e-3 && abs(cimag(matrix[i*n+j])+1.)<1e-3 ) printf(" -i");
+      if( fabs(creal(matrix[i*n+j]))<1e-3 && fabs(cimag(matrix[i*n+j]))<1e-3 ) printf("  0");
+      else if( fabs(creal(matrix[i*n+j])-1.)<1e-3 && fabs(cimag(matrix[i*n+j]))<1e-3 ) printf("  1");
+      else if( fabs(creal(matrix[i*n+j])+1.)<1e-3 && fabs(cimag(matrix[i*n+j]))<1e-3 ) printf(" -1");
+      else if( fabs(creal(matrix[i*n+j]))<1e-3 && fabs(cimag(matrix[i*n+j])-1.)<1e-3 ) printf("  i");
+      else if( fabs(creal(matrix[i*n+j]))<1e-3 && fabs(cimag(matrix[i*n+j])+1.)<1e-3 ) printf(" -i");
       else printf("  %.2f%+.2fi", creal(matrix[i*n+j]), cimag(matrix[i*n+j]));
     }
     printf("\n");
@@ -368,12 +368,12 @@ void Reshuffle_Clifford_Group(int p, int q, float complex *big_gammas, int num_h
       first += big_gammas[i+n*k*k] * big_gammas[i*k+n*k*k];
     }
     /* If it squares to 1, copy it to the beginning of the buffer */
-    if(abs(creal(first)-1)<1e-5) {
+    if(fabs(creal(first)-1)<1e-5) {
       for(int i=0;i<k*k;++i) buffer[i+off1] = big_gammas[i+n*k*k];
       off1 += k*k;
     }
     /* If it squares to -1 it's anti-hermitian */
-    else if(abs(creal(first)+1)<1e-5) {
+    else if(fabs(creal(first)+1)<1e-5) {
       for(int i=0;i<k*k;++i) buffer[i+off2] = big_gammas[i+n*k*k];
       off2 += k*k;
     }
@@ -498,7 +498,7 @@ void Calculate_Trace_Gamma_ABAB(float complex *Gamma_Matrices, int *sigmaAB, int
               trace += Gamma_Matrices[ii*K+jj+offi] * Gamma_Matrices[jj*K+ll+offj] *
                 Gamma_Matrices[ll*K+mm+offi] * Gamma_Matrices[mm*K+ii+offj];
 
-      if( abs(creal(trace))>0 ) {
+      if( fabs(creal(trace))>0 ) {
         trace *= (i<NUM_H?1:-1)*(j<NUM_H?1:-1);
         sigmaAB[i*num_m+j] = sgn(creal(trace));
         sigmaAB[j*num_m+i] = sgn(creal(trace));
