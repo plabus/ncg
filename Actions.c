@@ -293,38 +293,27 @@ double deltaS_traceD2(
   const double H_new_ij_Re = creal( Matrices[ offset + pos_upper ] );
   const double H_new_ij_Im = cimag( Matrices[ offset + pos_upper ] );
 
-  // H_TYPE:
-  // -------
-  if( type == H_TYPE )
+  // Off-diagonal case:
+  // ------------------
+  if( pos_upper != pos_lower )
   {
-    // Off-diagonal case
-    if( pos_upper != pos_lower )
-    {
-      return 4 * K * length * (
-          2 * ( t_Re * H_new_ij_Re + t_Im * H_new_ij_Im ) - ( t_Re * t_Re + t_Im * t_Im )
-          );
-    }
-    // Diagonal case
-    else
+    return 4 * K * length * (
+        2 * ( t_Re * H_new_ij_Re + t_Im * H_new_ij_Im ) - ( t_Re * t_Re + t_Im * t_Im )
+        );
+  }
+  // Diagonal case:
+  // --------------
+  else
+  {
+    // H_TYPE:
+    if( type == H_TYPE )
     {
       const double tr_H_new = tr_H( &Matrices[offset], length );
       return 2 * K * (
           length * ( 2 * t_Re * H_new_ij_Re - t_Re * t_Re ) + ( 2 * t_Re * tr_H_new - t_Re * t_Re )
           );
     }
-  }
-  // L_TYPE:
-  // -------
-  else
-  {
-    // Off-diagonal case
-    if( pos_upper != pos_lower )
-    {
-      return 4 * K * length * (
-          2 * ( t_Re * H_new_ij_Re + t_Im * H_new_ij_Im ) - ( t_Re * t_Re + t_Im * t_Im )
-          );
-    }
-    // Diagonal case
+    // L_TYPE:
     else
     {
       return 2 * K * length * (

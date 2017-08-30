@@ -8,8 +8,6 @@ Configuration I/O:
 -- need to save:
     N, P, Q, start(H/C)/restart, RNG state, g2, g4
 
-Calculate action for Tr D^4 when initalising
-
 Always write out action with config
 
 
@@ -22,6 +20,8 @@ Dirac stencil & Arnoldi
 
 PROGRESSING:
 ------------
+
+Calculate action for Tr D^4 when initalising & Testing S against deltaS for g4 != 0
 
 One binary only:
 -- parameter read in
