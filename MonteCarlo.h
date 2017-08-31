@@ -43,15 +43,13 @@ void random_matrix(
 // and off-diagonal elements can be varied of H_TYPE and L_TYPE
 // independently
 void random_matrices(
-    struct pcg32_random_t *rng,      // array of rng's, one for each matrix
-    REAL complex *Ms,                // pointer to first element of (num_h + num_l) N x N matrices
-    int const num_h,                 // number of matrices of H_TYPE
-    int const num_l,                 // number of matrices of L_TYPE
-    int const length,                // side length N (the same for all matrices)
-    double const step_length_diag_h, // range of diagonal elements for matrix H_TYPE
-    double const step_length_off_h,  // range of off-diagonal elements for matrix H_TYPE
-    double const step_length_diag_l, // range of diagonal elements for matrix H_TYPE
-    double const step_length_off_l   // range of off-diagonal elements for matrix H_TYPE
+    struct pcg32_random_t *rng,          // array of rng's, one for each matrix
+    REAL complex *Ms,                    // pointer to first element of (num_h + num_l) N x N matrices
+    struct Matrix_Properties const prop, // includes num_h, num_l, n and k
+    double const step_length_diag_h,     // range of diagonal elements for matrix H_TYPE
+    double const step_length_off_h,      // range of off-diagonal elements for matrix H_TYPE
+    double const step_length_diag_l,     // range of diagonal elements for matrix H_TYPE
+    double const step_length_off_l       // range of off-diagonal elements for matrix H_TYPE
     );
 
 // Initialise all Matrices for the MCMC, and return the initial action

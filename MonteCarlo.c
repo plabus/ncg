@@ -56,23 +56,28 @@ void random_matrix(
 // and off-diagonal elements can be varied of H_TYPE and L_TYPE
 // independently
 void random_matrices(
-    struct pcg32_random_t *rng,      // array of rng's, one for each matrix
-    REAL complex *Ms,                // pointer to first element of (num_h + num_l) N x N matrices
-    int const num_h,                 // number of matrices of H_TYPE
-    int const num_l,                 // number of matrices of L_TYPE
-    int const length,                // side length N (the same for all matrices)
-    double const step_length_diag_h, // range of diagonal elements for matrix H_TYPE
-    double const step_length_off_h,  // range of off-diagonal elements for matrix H_TYPE
-    double const step_length_diag_l, // range of diagonal elements for matrix H_TYPE
-    double const step_length_off_l   // range of off-diagonal elements for matrix H_TYPE
+    struct pcg32_random_t *rng,          // array of rng's, one for each matrix
+    REAL complex *Ms,                    // pointer to first element of (num_h + num_l) N x N matrices
+    struct Matrix_Properties const prop, // includes num_h, num_l, n and k
+    double const step_length_diag_h,     // range of diagonal elements for matrix H_TYPE
+    double const step_length_off_h,      // range of off-diagonal elements for matrix H_TYPE
+    double const step_length_diag_l,     // range of diagonal elements for matrix H_TYPE
+    double const step_length_off_l       // range of off-diagonal elements for matrix H_TYPE
     )
 {
+  // Unpack property parameters
+  size_t const num_h  = prop.num_h;
+  size_t const num_l  = prop.num_l;
+  size_t const length = prop.n;
+
+  // All matrices of H_TYPE
   for( uint64_t n = 0; n < num_h; ++n )
   {
     uint64_t const offset = n * length * length;
     random_matrix( &rng[n], &Ms[offset], length, step_length_diag_h, step_length_off_h, H_TYPE );
   }
 
+  // All matrices of L_TYPE
   for( uint64_t n = num_h; n < num_h + num_l; ++n )
   {
     uint64_t const offset = n * length * length;
@@ -87,19 +92,11 @@ double Matrices_Initialisation(
     struct Matrix_Properties const prop // includes num_h, num_l, n and k
     )
 {
-  // Unpack property parameters
-  size_t const num_h = prop.num_h;
-  size_t const num_l = prop.num_l;
-  size_t const n     = prop.n;
-  size_t const k     = prop.k;
-
   // Set high-temperature initial state for all  matrices, where random elements are in the range [-1-i, 1+i]
-  random_matrices( rng, Matrices, num_h, num_l, n, 1.0, 1.0, 1.0, 1.0 );
+  random_matrices( rng, Matrices, prop, 1.0, 1.0, 1.0, 1.0 );
 
-  // Calculate the initial action
-  const double action = G2 * traceD2( Matrices, num_h, num_l, n )
-                      + G4 * traceD4( Matrices, num_h, num_l, n, k );
-  return action;
+  // Calculate the initial action and return
+  return action( Matrices, prop );
 }
 
 // Generate a new Monte Carlo candidate by changing one matrix element in one matrix
