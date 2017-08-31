@@ -13,6 +13,7 @@
 #include "Random.h"
 #include "MonteCarlo.h"
 #include "Actions.h"
+#include "Matrix_Properties.h"
 
 // Double escape in order to print
 // precision REAL as string
@@ -68,7 +69,7 @@ int main()
   Matrices = (REAL complex *) calloc(NUM_M*SWEEP,sizeof(REAL complex));
 
   // Memory needed for H's and L's, and gamma matrices
-  int memory = NUM_M * SWEEP * sizeof(REAL complex) + size_gammas * sizeof(float complex);
+  const int memory = NUM_M * SWEEP * sizeof(REAL complex) + size_gammas * sizeof(float complex);
 
 /////////////////////////////////////////////////////////////////////
 //                                                                 //
@@ -86,9 +87,15 @@ int main()
 //                                                                 //
 /////////////////////////////////////////////////////////////////////
 
-  double start_time = cclock();
+  const double start_time = cclock();
 
-  double action = Matrices_Initialisation( rngs, Matrices, NUM_H, NUM_L, N );
+  const struct Matrix_Properties parameters = {
+    .num_h = NUM_H,
+    .num_l = NUM_L,
+    .n = N,
+    .k = K
+  };
+  double action = Matrices_Initialisation( rngs, Matrices, parameters );
 
   if(rank==0)
   {
@@ -160,7 +167,7 @@ int main()
       tune_step_size( acc_rate_sweep, &step_size );
 
       // time, rank, sweep, action S, acceptance (accumulated), acceptance (last sweeps)
-      action = traceD2( Matrices, NUM_H, NUM_L, N );
+      action = G2 * traceD2( Matrices, NUM_H, NUM_L, N ) + G4 * traceD4( Matrices, NUM_H, NUM_L, N, K );
       fprintf(
           stdout,
           "  %s \t %3d \t %5lu \t %.6f \t %4.2f \t %4.2f\n",

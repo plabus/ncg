@@ -82,19 +82,23 @@ void random_matrices(
 
 // Initialise all Matrices for the MCMC, and return the initial action
 double Matrices_Initialisation(
-    struct pcg32_random_t *rng, // array of rng's, one for each matrix
-    REAL complex *Matrices,     // array of matrices
-    int const num_h,            // number of matrices of H_TYPE
-    int const num_l,            // number of matrices of L_TYPE
-    int const length            // side length N (the same for all matrices)
+    struct pcg32_random_t *rng,         // array of rng's, one for each matrix
+    REAL complex *Matrices,             // array of matrices
+    struct Matrix_Properties const prop // includes num_h, num_l, n and k
     )
 {
+  // Unpack property parameters
+  size_t const num_h = prop.num_h;
+  size_t const num_l = prop.num_l;
+  size_t const n     = prop.n;
+  size_t const k     = prop.k;
+
   // Set high-temperature initial state for all  matrices, where random elements are in the range [-1-i, 1+i]
-  random_matrices( rng, Matrices, num_h, num_l, length, 1.0, 1.0, 1.0, 1.0 );
+  random_matrices( rng, Matrices, num_h, num_l, n, 1.0, 1.0, 1.0, 1.0 );
 
   // Calculate the initial action
-  const double action = G2 * traceD2( Matrices, num_h, num_l, length )
-                      + G4 * traceD4( Matrices, num_h, num_l, length );
+  const double action = G2 * traceD2( Matrices, num_h, num_l, n )
+                      + G4 * traceD4( Matrices, num_h, num_l, n, k );
   return action;
 }
 

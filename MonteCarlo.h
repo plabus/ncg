@@ -3,6 +3,7 @@
 
 #include "Random.h"
 #include "Constants.h"
+#include "Matrix_Properties.h"
 
 // Types of HERMITIAN matrices
 // H_TYPE has no constraints on the trace
@@ -55,11 +56,9 @@ void random_matrices(
 
 // Initialise all Matrices for the MCMC, and return the initial action
 double Matrices_Initialisation(
-    struct pcg32_random_t *rng, // array of rng's, one for each matrix
-    REAL complex *Matrices,     // array of matrices
-    int const num_h,            // number of matrices of H_TYPE
-    int const num_l,            // number of matrices of L_TYPE
-    int const length            // side length N (the same for all matrices)
+    struct pcg32_random_t *rng,         // array of rng's, one for each matrix
+    REAL complex *Matrices,             // array of matrices
+    struct Matrix_Properties const prop // includes num_h, num_l, n and k
     );
 
 // Generate a new Monte Carlo candidate by changing one matrix element in one matrix
