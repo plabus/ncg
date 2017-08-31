@@ -167,7 +167,7 @@ int main()
       tune_step_size( acc_rate_sweep, &step_size );
 
       // time, rank, sweep, action S, acceptance (accumulated), acceptance (last sweeps)
-      action = G2 * traceD2( Matrices, NUM_H, NUM_L, N ) + G4 * traceD4( Matrices, NUM_H, NUM_L, N, K );
+      action = Calculate_Action( Matrices, parameters );
       fprintf(
           stdout,
           "  %s \t %3d \t %5lu \t %.6f \t %4.2f \t %4.2f\n",

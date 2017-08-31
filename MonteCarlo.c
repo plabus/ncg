@@ -96,7 +96,7 @@ double Matrices_Initialisation(
   random_matrices( rng, Matrices, prop, 1.0, 1.0, 1.0, 1.0 );
 
   // Calculate the initial action and return
-  return action( Matrices, prop );
+  return Calculate_Action( Matrices, prop );
 }
 
 // Generate a new Monte Carlo candidate by changing one matrix element in one matrix

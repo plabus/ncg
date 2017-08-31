@@ -86,7 +86,7 @@ double traceD4(
 
 // Wrapper function for the full action:
 // calculates S = g2 * Tr(D^2) + g4 * Tr(D^4)
-double action(
+double Calculate_Action(
     REAL complex const *Matrices,       // array of matrices
     struct Matrix_Properties const prop // includes num_h, num_l, n and k
     );
