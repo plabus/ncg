@@ -101,17 +101,18 @@ double Matrices_Initialisation(
 
 // Generate a new Monte Carlo candidate by changing one matrix element in one matrix
 struct Matrix_State Generate_Candidate(
-    struct pcg32_random_t *rng, // pointer to one rng
-    REAL complex *Matrices,     // array of matrices
-    const int length,           // side length N of one matrix in Matrices (the same for all matrices)
-    const double step_size,     // length of each Monte Carlo step
-    const int matrix            // in which matrix an element should be changed
+    struct pcg32_random_t *rng,                // pointer to one rng
+    REAL complex *Matrices,                    // array of matrices
+    struct Matrix_Properties const parameters, // includes num_h, num_l, n and k
+    const double step_size,                    // length of each Monte Carlo step
+    const int matrix                           // in which matrix an element should be changed
     )
 {
   // Generate position of change and save old element:
   // -------------------------------------------------
 
   // Set the offset to write to the right matrix
+  const int length = parameters.n;
   const int offset = matrix * length * length;
 
   // Calculate two random integers and generate position in upper and lower half
@@ -155,12 +156,13 @@ struct Matrix_State Generate_Candidate(
 
 // Restore the Matrices as they have been before using Generate_Candidate
 void Restore_Matrices(
-    REAL complex *Matrices,        // array of matrices
-    const int length,              // side length N of one matrix in Matrices (the same for all matrices)
-    const struct Matrix_State old  // old state
+    REAL complex *Matrices,                    // array of matrices
+    struct Matrix_Properties const parameters, // includes num_h, num_l, n and k
+    const struct Matrix_State old              // old state
     )
 {
   // Set the offset to write to the right matrix
+  const int length = parameters.n;
   const int offset = old.matrix * length * length;
 
   // Off-diagonal case
@@ -178,36 +180,35 @@ void Restore_Matrices(
 
 // Creates a new Markov chain element
 void Get_Next_MCMC_Element(
-    struct pcg32_random_t *rng, // array of rng's, one for each matrix
-    REAL complex *Matrices,     // array of matrices
-    const int num_h,            // number of matrices of H_TYPE
-    const int num_l,            // number of matrices of L_TYPE
-    const int length,           // side length N of one matrix in Matrices (the same for all matrices)
-    int *sigmaAB,               // pre-calculated Clifford products of 2 Gamma matrices
-    int **sigmaABCD,            // pre-calculated Clifford products of 4 Gamma matrices
-    uint64_t* accepted,         // pointer to number of accepted steps
-    const double step_size      // length of each Monte Carlo step
+    struct pcg32_random_t *rng,                // array of rng's, one for each matrix
+    REAL complex *Matrices,                    // array of matrices
+    struct Matrix_Properties const parameters, // includes num_h, num_l, n and k
+    int *sigmaAB,                              // pre-calculated Clifford products of 2 Gamma matrices
+    int **sigmaABCD,                           // pre-calculated Clifford products of 4 Gamma matrices
+    uint64_t* accepted,                        // pointer to number of accepted steps
+    const double step_size                     // length of each Monte Carlo step
     )
 {
   // For each matrix, separately generate a new candidate,
   // calculate the resulting action and perform a Monte Carlo step
-  for( size_t number_matrix = 0; number_matrix < num_h + num_l; ++number_matrix )
+  for( size_t number_matrix = 0; number_matrix < parameters.num_h + parameters.num_l; ++number_matrix )
   {
 
     // Generate new candidate and calculate new action:
     // ------------------------------------------------
 
-    const double action_old = traceD2( Matrices, num_h, num_l, length );
+    const double action_old = Calculate_Action( Matrices, parameters );
     const struct Matrix_State old =
-      Generate_Candidate( &rng[number_matrix], Matrices, length, step_size, number_matrix );
-    const double action_new = traceD2( Matrices, num_h, num_l, length );
-    const double delta_action_naive = action_new - action_old;
-    const double delta_action = deltaS_traceD2( Matrices, num_h, num_l, length, old );
+      Generate_Candidate( &rng[number_matrix], Matrices, parameters, step_size, number_matrix );
+    const double action_new = Calculate_Action( Matrices, parameters );
+    const double delta_action = action_new - action_old;
 
-    if( fabs(delta_action_naive-delta_action) > 1e-08 )
-    {
-      printf("  !!!!!!!!!!!!!!!!!!!!!! deltadeltaS = %g\n", delta_action_naive-delta_action);
-    }
+    // const double delta_action_naive = action_new - action_old;
+    // const double delta_action = deltaS_traceD2( Matrices, num_h, num_l, length, old );
+    // if( fabs(delta_action_naive-delta_action) > 1e-08 )
+    // {
+    //   printf("  !!!!!!!!!!!!!!!!!!!!!! deltadeltaS = %g\n", delta_action_naive-delta_action);
+    // }
 
 
     // Monte Carlo move decision:
@@ -223,7 +224,7 @@ void Get_Next_MCMC_Element(
     // reject
     else
     {
-      Restore_Matrices( Matrices, length, old );
+      Restore_Matrices( Matrices, parameters, old );
     }
 
   }
@@ -239,5 +240,14 @@ void tune_step_size(
   // we want to decrease the step size if the measured rate is smaller than the ideal one and
   // we want to increase the step size if the measured rate is larger  than the ideal one.
   // We assume this rate to be 23%
-  *step_size *= acceptance_rate / 0.23;
+
+  // If the acceptance rate was zero set step size to small value:
+  if( acceptance_rate < 1e-6 )
+  {
+    *step_size *= 0.0001;
+  }
+  else
+  {
+    *step_size *= acceptance_rate / 0.23;
+  }
 }

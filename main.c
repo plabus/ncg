@@ -147,7 +147,7 @@ int main()
   for( uint64_t t = 0; t < CHAIN_LENGTH; ++t )
   {
     // Generate new chain element
-    Get_Next_MCMC_Element( rngs, Matrices, NUM_H, NUM_L, N, SigmaAB, SigmaABCD, &accepted, step_size );
+    Get_Next_MCMC_Element( rngs, Matrices, parameters, SigmaAB, SigmaABCD, &accepted, step_size );
 
     // Print some diagnostics each WRITEOUT_FREQ SWEEPs
     if( t % WRITEOUT_FREQ == 0 && t != 0 )
