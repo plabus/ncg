@@ -124,9 +124,11 @@ struct Matrix_State Generate_Candidate(
   // Save the old value
   const REAL complex old_element = Matrices[ offset + pos_upper ];
   const struct Matrix_State old_state = {
-    .matrix = matrix,
-    .pos_upper = pos_upper,
-    .pos_lower = pos_lower,
+    .matrix         = matrix,
+    .pos_x          = pos_x,
+    .pos_y          = pos_y,
+    .pos_upper      = pos_upper,
+    .pos_lower      = pos_lower,
     .matrix_element = old_element
   };
 

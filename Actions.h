@@ -49,11 +49,11 @@ double tr4(
     int const pos4                // position of the 4th matrix inside the Matrices array
     );
 
-double tr2_real_ij(REAL complex *Matrices, int pos1, int pos2, int pos_x, int pos_y);
-double tr2_imag_ij(REAL complex *Matrices, int pos1, int pos2, int pos_x, int pos_y);
-double tr3_real_ij(REAL complex *Matrices, int pos1, int pos2, int pos3, int pos_x, int pos_y);
-double tr3_imag_ij(REAL complex *Matrices, int pos1, int pos2, int pos3, int pos_x, int pos_y);
-double row_norm_squared(REAL complex *Matrices, int pos1, int pos_row);
+double tr2_real_ij(REAL complex const *Matrices, int pos1, int pos2, int pos_x, int pos_y);
+double tr2_imag_ij(REAL complex const *Matrices, int pos1, int pos2, int pos_x, int pos_y);
+double tr3_real_ij(REAL complex const *Matrices, int pos1, int pos2, int pos3, int pos_x, int pos_y);
+double tr3_imag_ij(REAL complex const *Matrices, int pos1, int pos2, int pos3, int pos_x, int pos_y);
+double row_norm_squared(REAL complex const *Matrices, int pos1, int pos_row);
 
 // Calculate the trace of a matrix H
 double tr_H(
@@ -79,6 +79,26 @@ double traceD4(
     struct Matrix_Properties const prop // includes num_h, num_l, n and k
     );
 
+// Calculate the change of the action S = Tr D^2,
+// if in one matrix one element is changed (t),
+// where the matrix is in its already changed state
+double delta_traceD2(
+    REAL complex const *Matrices,        // array of matrices
+    struct Matrix_Properties const prop, // includes num_h, num_l, n and k
+    struct Matrix_State const old        // old state
+    );
+
+// Calculate the change of the action S = Tr D^2,
+// if in one matrix one element is changed ( t = a + I * b ),
+// where the matrix is in its already changed state
+double delta_traceD4(
+    REAL complex const *Matrices,        // array of matrices
+    struct Matrix_Properties const prop, // includes num_h, num_l, n and k
+    const struct Matrix_State old_state, // struct containing information about old state
+    int *sigmaAB,                        // pre-calculated Clifford products of 2 Gamma matrices
+    int **sigmaABCD                      // pre-calculated Clifford products of 4 Gamma matrices
+    );
+
 // Wrapper function for the full action:
 // calculates S = g2 * Tr(D^2) + g4 * Tr(D^4)
 double Calculate_Action(
@@ -86,14 +106,13 @@ double Calculate_Action(
     struct Matrix_Properties const prop // includes num_h, num_l, n and k
     );
 
-// Calculate the change of the action S = Tr D^2,
-// if in one matrix one element is changed (t),
-// where the matrix is in its already changed state
-double deltaS_traceD2(
-    REAL complex *Matrices,              // array of matrices
+// Wrapper function for the change in the action:
+// calculates delta_S = g2 * Tr(delta_D^2) + g4 * Tr(delta_D^4)
+double Calculate_Delta_Action(
+    REAL complex const *Matrices,        // array of matrices
     struct Matrix_Properties const prop, // includes num_h, num_l, n and k
-    const struct Matrix_State old        // old state
+    const struct Matrix_State old_state, // struct containing information about old state
+    int *sigmaAB,                        // pre-calculated Clifford products of 2 Gamma matrices
+    int **sigmaABCD                      // pre-calculated Clifford products of 4 Gamma matrices
     );
-
-double delta_action_traceD4(REAL complex *Matrices, int positionA, REAL complex temp, int pos_x, int pos_y, int *sigmaAB, int **sigmaABCD, int NUM_H, int NUM_L);
 #endif

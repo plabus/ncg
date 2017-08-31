@@ -15,6 +15,8 @@ enum Matrix_Type { H_TYPE, L_TYPE };
 struct Matrix_State
 {
   size_t matrix;
+  size_t pos_x;
+  size_t pos_y;
   size_t pos_upper;
   size_t pos_lower;
   REAL complex matrix_element;

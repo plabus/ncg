@@ -179,7 +179,7 @@ double tr4(
 
 /**********************************************************************************************/
 
-double tr2_real_ij(REAL complex *Matrices, int pos1, int pos2, int pos_x, int pos_y) {
+double tr2_real_ij(REAL complex const *Matrices, int pos1, int pos2, int pos_x, int pos_y) {
   double sum = 0.f;
   int off1 = pos1*SWEEP;
   int off2 = pos2*SWEEP;
@@ -197,7 +197,7 @@ double tr2_real_ij(REAL complex *Matrices, int pos1, int pos2, int pos_x, int po
 }
 
 
-double tr2_imag_ij(REAL complex *Matrices, int pos1, int pos2, int pos_x, int pos_y) {
+double tr2_imag_ij(REAL complex const *Matrices, int pos1, int pos2, int pos_x, int pos_y) {
   double sum = 0.f;
   int off1 = pos1*SWEEP;
   int off2 = pos2*SWEEP;
@@ -215,7 +215,7 @@ double tr2_imag_ij(REAL complex *Matrices, int pos1, int pos2, int pos_x, int po
 }
 
 
-double tr3_real_ij(REAL complex *Matrices, int pos1, int pos2, int pos3, int pos_x, int pos_y) {
+double tr3_real_ij(REAL complex const *Matrices, int pos1, int pos2, int pos3, int pos_x, int pos_y) {
   double sum = 0.f;
   int off1 = pos1*SWEEP;
   int off2 = pos2*SWEEP;
@@ -238,7 +238,7 @@ double tr3_real_ij(REAL complex *Matrices, int pos1, int pos2, int pos3, int pos
 }
 
 
-double tr3_imag_ij(REAL complex *Matrices, int pos1, int pos2, int pos3, int pos_x, int pos_y) {
+double tr3_imag_ij(REAL complex const *Matrices, int pos1, int pos2, int pos3, int pos_x, int pos_y) {
   double sum = 0.f;
   int off1 = pos1*SWEEP;
   int off2 = pos2*SWEEP;
@@ -261,7 +261,7 @@ double tr3_imag_ij(REAL complex *Matrices, int pos1, int pos2, int pos3, int pos
 }
 
 
-double matrix_norm_squared(REAL complex *Matrices, int pos1) {
+double matrix_norm_squared(REAL complex const *Matrices, int pos1) {
   double sum_off_diag = 0.f;
   double trace_squared = 0.f;
   int off1 = pos1*SWEEP;
@@ -279,7 +279,7 @@ double matrix_norm_squared(REAL complex *Matrices, int pos1) {
 }
 
 
-double row_norm_squared(REAL complex *Matrices, int pos1, int pos_row) {
+double row_norm_squared(REAL complex const *Matrices, int pos1, int pos_row) {
   double sum = 0.f;
   int off = pos1*SWEEP + pos_row*N;
 
@@ -380,10 +380,10 @@ double traceD2(
 // Calculate the change of the action S = Tr D^2,
 // if in one matrix one element is changed (t),
 // where the matrix is in its already changed state
-double deltaS_traceD2(
-    REAL complex *Matrices,              // array of matrices
+double delta_traceD2(
+    REAL complex const *Matrices,        // array of matrices
     struct Matrix_Properties const prop, // includes num_h, num_l, n and k
-    const struct Matrix_State old        // old state
+    struct Matrix_State const old        // old state
     )
 {
   // Unpack needed information
@@ -475,28 +475,36 @@ double traceD4(
   return action;
 }
 
-double delta_action_traceD4(
-    REAL complex *Matrices,
-    int positionA,
-    REAL complex temp,
-    int pos_x,
-    int pos_y,
-    int *sigmaAB,
-    int **sigmaABCD,
-    int NUM_H,
-    int NUM_L
+// Calculate the change of the action S = Tr D^2,
+// if in one matrix one element is changed ( t = a + I * b ),
+// where the matrix is in its already changed state
+double delta_traceD4(
+    REAL complex const *Matrices,        // array of matrices
+    struct Matrix_Properties const prop, // includes num_h, num_l, n and k
+    const struct Matrix_State old_state, // struct containing information about old state
+    int *sigmaAB,                        // pre-calculated Clifford products of 2 Gamma matrices
+    int **sigmaABCD                      // pre-calculated Clifford products of 4 Gamma matrices
     )
 {
-  int off = positionA * SWEEP;
+  // Unpack property parameters
+  size_t const num_h = prop.num_h;
+  size_t const num_l = prop.num_l;
+  size_t const n     = prop.n;
+  size_t const k     = prop.k;
+  size_t const positionA = old_state.matrix; // number of the matrix that has changed
+  size_t const pos_upper = old_state.pos_upper; // index in uppper triangle where element was changed
+  // FIXME: Did this come in a specific order????
+  size_t const pos_x = old_state.pos_x;
+  size_t const pos_y = old_state.pos_y;
+  REAL complex const old = old_state.matrix_element; // the old matrix element at that position
+
+  size_t const off = positionA * n * n;
+  int const sgnA = positionA < num_h ? 1 : -1;
+  size_t const num_trABCD = sigmaABCD[positionA][0];
+
   int offB, offC, offD;
-  int pos_upper = pos_x<=pos_y ? pos_x*N+pos_y : pos_y*N+pos_x;
-  int sgnA = positionA < NUM_H ? 1 : -1;
   int sgnB, sgnC, sgnD, sAB;
   int b1, b2, c1, c2, d1, d2, s;
-  int num_trABCD = sigmaABCD[positionA][0];
-
-  /* Save the old value of the matrix where a new element was generated. */
-  REAL complex old = Matrices[pos_upper+off];
 
   double delta1;
   double delta2;
@@ -539,13 +547,19 @@ double delta_action_traceD4(
    *                                                     *
    *******************************************************/
 
-  a = creal(temp) - creal(old);
-  b = cimag(temp) - cimag(old);
+  // FIXME:
+  // HERE WAS DEFINED
+  // delta A = A_new - A_old == a + b*i
+  //       A = A_old
+  //       A_ij = A_old_ij == c + d*i
+
+  a = creal( Matrices[ off + pos_upper ] ) - creal(old);
+  b = cimag( Matrices[ off + pos_upper ] ) - cimag(old);
   c = creal(old);
   d = cimag(old);
 
-  trA  = tr1(Matrices, NUM_H, NUM_L, N, positionA);
-  trA2 = tr2(Matrices, NUM_H, NUM_L, N, positionA, positionA);
+  trA  = tr1(Matrices, num_h, num_l, N, positionA);
+  trA2 = tr2(Matrices, num_h, num_l, N, positionA, positionA);
   A_ii = creal( Matrices[pos_x*N+pos_x+off] );
   A_jj = creal( Matrices[pos_y*N+pos_y+off] );
 
@@ -605,12 +619,12 @@ double delta_action_traceD4(
       if(positionB==positionA) continue;
 
       sAB = sigmaAB[positionA*NUM_M+positionB];
-      sgnB = positionB < NUM_H ? 1 : -1;
-      offB = positionB * SWEEP;
+      sgnB = positionB < num_h ? 1 : -1;
+      offB = positionB * n * n;
 
-      trB  = tr1(Matrices, NUM_H, NUM_L, N, positionB);
-      trB2 = tr2(Matrices, NUM_H, NUM_L, N, positionB, positionB);
-      trAB = tr2(Matrices, NUM_H, NUM_L, N, positionA, positionB);
+      trB  = tr1(Matrices, num_h, num_l, N, positionB);
+      trB2 = tr2(Matrices, num_h, num_l, N, positionB, positionB);
+      trAB = tr2(Matrices, num_h, num_l, N, positionA, positionB);
 
       c_B  = creal( Matrices[pos_upper+offB] );
       d_B  = cimag( Matrices[pos_upper+offB] );
@@ -677,13 +691,13 @@ double delta_action_traceD4(
       d2            = sigmaABCD[positionA][9*element+9];
       s = b1 + b2 + c1 + c2 + d1 + d2;
 
-      offB = positionB * SWEEP;
-      offC = positionC * SWEEP;
-      offD = positionD * SWEEP;
+      offB = positionB * n * n;
+      offC = positionC * n * n;
+      offD = positionD * n * n;
 
-      sgnB = positionB < NUM_H ? 1 : -1;
-      sgnC = positionC < NUM_H ? 1 : -1;
-      sgnD = positionD < NUM_H ? 1 : -1;
+      sgnB = positionB < num_h ? 1 : -1;
+      sgnC = positionC < num_h ? 1 : -1;
+      sgnD = positionD < num_h ? 1 : -1;
 
       c_B = creal( Matrices[pos_upper+offB] );
       d_B = cimag( Matrices[pos_upper+offB] );
@@ -693,14 +707,14 @@ double delta_action_traceD4(
       d_D = cimag( Matrices[pos_upper+offD] );
 
       /* Traces over one matrix: */
-      trB = tr1(Matrices, NUM_H, NUM_L, N, positionB);
-      trC = tr1(Matrices, NUM_H, NUM_L, N, positionC);
-      trD = tr1(Matrices, NUM_H, NUM_L, N, positionD);
+      trB = tr1(Matrices, num_h, num_l, N, positionB);
+      trC = tr1(Matrices, num_h, num_l, N, positionC);
+      trD = tr1(Matrices, num_h, num_l, N, positionD);
 
       /* Traces over two matrices: */
-      trABtrCD = (a * c_B + b * d_B) * tr2(Matrices, NUM_H, NUM_L, N, positionC, positionD);
-      trACtrBD = (a * c_C + b * d_C) * tr2(Matrices, NUM_H, NUM_L, N, positionB, positionD);
-      trADtrBC = (a * c_D + b * d_D) * tr2(Matrices, NUM_H, NUM_L, N, positionB, positionC);
+      trABtrCD = (a * c_B + b * d_B) * tr2(Matrices, num_h, num_l, N, positionC, positionD);
+      trACtrBD = (a * c_C + b * d_C) * tr2(Matrices, num_h, num_l, N, positionB, positionD);
+      trADtrBC = (a * c_D + b * d_D) * tr2(Matrices, num_h, num_l, N, positionB, positionC);
 
       /* Traces over one and three matrices: */
       if(sgnB==1) {
@@ -768,7 +782,7 @@ double delta_action_traceD4(
 
     sum[0] = row_norm_squared(Matrices, positionA, pos_x);
     sum[1] = tr3_real_ij(Matrices, positionA, positionA, positionA, pos_x, pos_x);
-    if(sgnA==1) sum[2] = tr3(Matrices, NUM_H, NUM_L, N, positionA, positionA, positionA);
+    if(sgnA==1) sum[2] = tr3(Matrices, num_h, num_l, N, positionA, positionA, positionA);
     else        sum[2] = 0;
 
     F = a*a + 2*a*c;
@@ -794,13 +808,13 @@ double delta_action_traceD4(
       if(positionB==positionA) continue;
 
       sAB = sigmaAB[positionA*NUM_M+positionB];
-      sgnB = positionB < NUM_H ? 1 : -1;
-      offB = positionB * SWEEP;
+      sgnB = positionB < num_h ? 1 : -1;
+      offB = positionB * n * n;
 
-      trB  = tr1(Matrices, NUM_H, NUM_L, N, positionB);
-      trB2 = tr2(Matrices, NUM_H, NUM_L, N, positionB, positionB);
-      trAB = tr2(Matrices, NUM_H, NUM_L, N, positionA, positionB);
-      if(sgnA==1) trAB2 = tr3(Matrices, NUM_H, NUM_L, N, positionA, positionB, positionB);
+      trB  = tr1(Matrices, num_h, num_l, N, positionB);
+      trB2 = tr2(Matrices, num_h, num_l, N, positionB, positionB);
+      trAB = tr2(Matrices, num_h, num_l, N, positionA, positionB);
+      if(sgnA==1) trAB2 = tr3(Matrices, num_h, num_l, N, positionA, positionB, positionB);
       else        trAB2 = 0;
 
       c_B = creal( Matrices[pos_upper+offB] );
@@ -849,32 +863,32 @@ double delta_action_traceD4(
       d2            = sigmaABCD[positionA][9*element+9];
       s = b1 + b2 + c1 + c2 + d1 + d2;
 
-      offB = positionB * SWEEP;
-      offC = positionC * SWEEP;
-      offD = positionD * SWEEP;
+      offB = positionB * n * n;
+      offC = positionC * n * n;
+      offD = positionD * n * n;
 
-      sgnB = positionB < NUM_H ? 1 : -1;
-      sgnC = positionC < NUM_H ? 1 : -1;
-      sgnD = positionD < NUM_H ? 1 : -1;
+      sgnB = positionB < num_h ? 1 : -1;
+      sgnC = positionC < num_h ? 1 : -1;
+      sgnD = positionD < num_h ? 1 : -1;
 
       c_B = creal( Matrices[pos_upper+offB] );
       c_C = creal( Matrices[pos_upper+offC] );
       c_D = creal( Matrices[pos_upper+offD] );
 
       /* Traces over one matrix: */
-      trB = tr1(Matrices, NUM_H, NUM_L, N, positionB);
-      trC = tr1(Matrices, NUM_H, NUM_L, N, positionC);
-      trD = tr1(Matrices, NUM_H, NUM_L, N, positionD);
+      trB = tr1(Matrices, num_h, num_l, N, positionB);
+      trC = tr1(Matrices, num_h, num_l, N, positionC);
+      trD = tr1(Matrices, num_h, num_l, N, positionD);
 
       /* Traces over two matrices: */
-      trABtrCD = c_B * tr2(Matrices, NUM_H, NUM_L, N, positionC, positionD);
-      trACtrBD = c_C * tr2(Matrices, NUM_H, NUM_L, N, positionB, positionD);
-      trADtrBC = c_D * tr2(Matrices, NUM_H, NUM_L, N, positionB, positionC);
+      trABtrCD = c_B * tr2(Matrices, num_h, num_l, N, positionC, positionD);
+      trACtrBD = c_C * tr2(Matrices, num_h, num_l, N, positionB, positionD);
+      trADtrBC = c_D * tr2(Matrices, num_h, num_l, N, positionB, positionC);
 
       /* Traces over one and three matrices: */
       if(sgnA==1) {
-        trF1 = (b1+c2+d1)*tr3(Matrices, NUM_H, NUM_L, N, positionB, positionC, positionD);
-        trF1+= (b2+c1+d2)*tr3(Matrices, NUM_H, NUM_L, N, positionC, positionB, positionD);
+        trF1 = (b1+c2+d1)*tr3(Matrices, num_h, num_l, N, positionB, positionC, positionD);
+        trF1+= (b2+c1+d2)*tr3(Matrices, num_h, num_l, N, positionC, positionB, positionD);
       } else {
         trF1 = 0;
       }
@@ -911,7 +925,7 @@ double delta_action_traceD4(
     } /* END LOOP OVER MATRICES */
   } /* END DIAGONAL CASE */
 
-  return 2*K*(delta1+delta2+4*delta3);
+  return 2 * k * ( delta1 + delta2 + 4 * delta3 );
 }
 
 // Wrapper function for the full action:
@@ -922,4 +936,18 @@ double Calculate_Action(
     )
 {
   return prop.g2 * traceD2( Matrices, prop ) + prop.g4 * traceD4( Matrices, prop );
+}
+
+// Wrapper function for the change in the action:
+// calculates delta_S = g2 * Tr(delta_D^2) + g4 * Tr(delta_D^4)
+double Calculate_Delta_Action(
+    REAL complex const *Matrices,        // array of matrices
+    struct Matrix_Properties const prop, // includes num_h, num_l, n and k
+    const struct Matrix_State old,       // struct containing information about old state
+    int *sigmaAB,                        // pre-calculated Clifford products of 2 Gamma matrices
+    int **sigmaABCD                      // pre-calculated Clifford products of 4 Gamma matrices
+    )
+{
+  return prop.g2 * delta_traceD2( Matrices, prop, old )
+       + prop.g4 * delta_traceD4( Matrices, prop, old, sigmaAB, sigmaABCD );
 }
