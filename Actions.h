@@ -4,9 +4,50 @@
 #include "Constants.h"
 #include "MonteCarlo.h"
 
-double tr1(REAL complex *Matrices, int pos1, int NUM_H);
-double tr2(REAL complex *Matrices, int pos1, int pos2);
-double tr3(REAL complex *Matrices, int pos1, int pos2, int pos3);
+// Calculates the trace of a single matrix in the array Matrices at position pos1
+double tr1(
+    REAL complex const *Matrices, // array of matrices
+    int const num_h,              // number of matrices of H_TYPE
+    int const num_l,              // number of matrices of L_TYPE
+    int const length,             // side length N of one matrix in Matrices (the same for all matrices)
+    int const pos1                // position of the matrix inside the Matrices array
+    );
+
+// Calculates the trace of the product of two matrix in the array Matrices
+// at positions pos1 and pos2
+double tr2(
+    REAL complex const *Matrices, // array of matrices
+    int const num_h,              // number of matrices of H_TYPE
+    int const num_l,              // number of matrices of L_TYPE
+    int const length,             // side length N of one matrix in Matrices (the same for all matrices)
+    int const pos1,               // position of the 1st matrix inside the Matrices array
+    int const pos2                // position of the 2nd matrix inside the Matrices array
+    );
+
+// Calculates the trace of the product of three matrix in the array Matrices
+// at positions pos1, pos2 and pos3
+double tr3(
+    REAL complex const *Matrices, // array of matrices
+    int const num_h,              // number of matrices of H_TYPE
+    int const num_l,              // number of matrices of L_TYPE
+    int const length,             // side length N of one matrix in Matrices (the same for all matrices)
+    int const pos1,               // position of the 1st matrix inside the Matrices array
+    int const pos2,               // position of the 2nd matrix inside the Matrices array
+    int const pos3                // position of the 3rd matrix inside the Matrices array
+    );
+
+// Calculates the trace of the product of four matrix in the array Matrices
+// at positions pos1, pos2, pos3 and pos4
+double tr4(
+    REAL complex const *Matrices, // array of matrices
+    int const num_h,              // number of matrices of H_TYPE
+    int const num_l,              // number of matrices of L_TYPE
+    int const length,             // side length N of one matrix in Matrices (the same for all matrices)
+    int const pos1,               // position of the 1st matrix inside the Matrices array
+    int const pos2,               // position of the 2nd matrix inside the Matrices array
+    int const pos3,               // position of the 3rd matrix inside the Matrices array
+    int const pos4                // position of the 4th matrix inside the Matrices array
+    );
 
 double tr2_real_ij(REAL complex *Matrices, int pos1, int pos2, int pos_x, int pos_y);
 double tr2_imag_ij(REAL complex *Matrices, int pos1, int pos2, int pos_x, int pos_y);
@@ -39,7 +80,8 @@ double traceD4(
     REAL complex const *Matrices, // Array of all matrices
     int const num_h,              // number of matrices of H_TYPE
     int const num_l,              // number of matrices of L_TYPE
-    int const length              // side length of all matrices
+    int const n,                  // side length of all matrices
+    int const k                   // dimension k of gamma matrices
     );
 
 // Calculate the change of the action S = Tr D^2,

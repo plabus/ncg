@@ -8,49 +8,168 @@
 
 /**********************************************************************************************/
 
-double tr1(REAL complex *Matrices, int pos1, int NUM_H) {
-  double trace = 0.f;
-  int off1 = pos1*SWEEP;
+// Calculates the trace of a single matrix in the array Matrices at position pos1
+double tr1(
+    REAL complex const *Matrices, // array of matrices
+    int const num_h,              // number of matrices of H_TYPE
+    int const num_l,              // number of matrices of L_TYPE
+    int const length,             // side length N of one matrix in Matrices (the same for all matrices)
+    int const pos1                // position of the matrix inside the Matrices array
+    )
+{
+  // Quickly returning for trace-less matrices
+  if( pos1 >= num_h )
+  {
+    return 0.0;
+  }
 
-  if(pos1<NUM_H) {
-    for(int a=0;a<N;++a) {
-      trace += creal( Matrices[a*N+a+off1] );
+  uint64_t const offset1 = pos1 * length * length;
+  double trace = 0.0;
+
+  for( uint64_t i = 0; i < length; ++i )
+  {
+    trace += creal( Matrices[ offset1 + i * length + i ] );
+  }
+
+  return trace;
+}
+
+// Calculates the trace of the product of two matrix in the array Matrices
+// at positions pos1 and pos2
+double tr2(
+    REAL complex const *Matrices, // array of matrices
+    int const num_h,              // number of matrices of H_TYPE
+    int const num_l,              // number of matrices of L_TYPE
+    int const length,             // side length N of one matrix in Matrices (the same for all matrices)
+    int const pos1,               // position of the 1st matrix inside the Matrices array
+    int const pos2                // position of the 2nd matrix inside the Matrices array
+    )
+{
+  uint64_t const offset1 = pos1 * length * length;
+  uint64_t const offset2 = pos2 * length * length;
+  double trace = 0.0;
+
+  for( uint64_t i = 0; i < length; ++i )
+  {
+    for( uint64_t j = 0; j < length; ++j )
+    {
+      trace += creal( Matrices[ offset1 + i * length + j ] ) * creal( Matrices[ offset2 + j * length + i ] );
+      trace -= cimag( Matrices[ offset1 + i * length + j ] ) * cimag( Matrices[ offset2 + j * length + i ] );
     }
   }
 
   return trace;
 }
 
+// Calculates the trace of the product of three matrix in the array Matrices
+// at positions pos1, pos2 and pos3
+double tr3(
+    REAL complex const *Matrices, // array of matrices
+    int const num_h,              // number of matrices of H_TYPE
+    int const num_l,              // number of matrices of L_TYPE
+    int const length,             // side length N of one matrix in Matrices (the same for all matrices)
+    int const pos1,               // position of the 1st matrix inside the Matrices array
+    int const pos2,               // position of the 2nd matrix inside the Matrices array
+    int const pos3                // position of the 3rd matrix inside the Matrices array
+    )
+{
+  uint64_t const offset1 = pos1 * length * length;
+  uint64_t const offset2 = pos2 * length * length;
+  uint64_t const offset3 = pos3 * length * length;
+  double trace = 0.0;
 
-double tr2(REAL complex *Matrices, int pos1, int pos2) {
-  double trace = 0.f;
-  int off1 = pos1*SWEEP;
-  int off2 = pos2*SWEEP;
-
-  for(int a=0;a<N;a++) {
-    for(int b=0;b<N;b++) {
-      trace += creal( Matrices[a*N+b+off1] ) * creal( Matrices[b*N+a+off2] );
-      trace -= cimag( Matrices[a*N+b+off1] ) * cimag( Matrices[b*N+a+off2] );
+  for( uint64_t i = 0; i < length; ++i )
+  {
+    for( uint64_t j = 0; j < length; ++j )
+    {
+      for( uint64_t k = 0; k < length; ++k )
+      {
+        trace += creal( Matrices[ offset1 + i * length + j ] ) *
+                 creal( Matrices[ offset2 + j * length + k ] ) *
+                 creal( Matrices[ offset3 + k * length + i ] );
+        trace -= cimag( Matrices[ offset1 + i * length + j ] ) *
+                 cimag( Matrices[ offset2 + j * length + k ] ) *
+                 creal( Matrices[ offset3 + k * length + i ] );
+        trace -= creal( Matrices[ offset1 + i * length + j ] ) *
+                 cimag( Matrices[ offset2 + j * length + k ] ) *
+                 cimag( Matrices[ offset3 + k * length + i ] );
+        trace -= cimag( Matrices[ offset1 + i * length + j ] ) *
+                 creal( Matrices[ offset2 + j * length + k ] ) *
+                 cimag( Matrices[ offset3 + k * length + i ] );
+      }
     }
   }
 
   return trace;
 }
 
+// Calculates the trace of the product of four matrix in the array Matrices
+// at positions pos1, pos2, pos3 and pos4
+double tr4(
+    REAL complex const *Matrices, // array of matrices
+    int const num_h,              // number of matrices of H_TYPE
+    int const num_l,              // number of matrices of L_TYPE
+    int const length,             // side length N of one matrix in Matrices (the same for all matrices)
+    int const pos1,               // position of the 1st matrix inside the Matrices array
+    int const pos2,               // position of the 2nd matrix inside the Matrices array
+    int const pos3,               // position of the 3rd matrix inside the Matrices array
+    int const pos4                // position of the 4th matrix inside the Matrices array
+    )
+{
+  uint64_t const offset1 = pos1 * length * length;
+  uint64_t const offset2 = pos2 * length * length;
+  uint64_t const offset3 = pos3 * length * length;
+  uint64_t const offset4 = pos4 * length * length;
+  double trace = 0.0;
 
-double tr3(REAL complex *Matrices, int pos1, int pos2, int pos3) {
-  double trace = 0.f;
-  int off1 = pos1*SWEEP;
-  int off2 = pos2*SWEEP;
-  int off3 = pos3*SWEEP;
+  for( uint64_t i = 0; i < length; ++i )
+  {
+    for( uint64_t j = 0; j < length; ++j )
+    {
+      for( uint64_t k = 0; k < length; ++k )
+      {
+        for( uint64_t l = 0; l < length; ++l )
+        {
+          trace += creal( Matrices[ offset1 + i * length + j ] ) *
+                   creal( Matrices[ offset2 + j * length + k ] ) *
+                   creal( Matrices[ offset3 + k * length + l ] ) *
+                   creal( Matrices[ offset4 + l * length + i ] );
 
-  for(int a=0;a<N;a++) {
-    for(int b=0;b<N;b++) {
-      for(int c=0;c<N;c++) {
-        trace += creal( Matrices[a*N+b+off1] ) * creal( Matrices[b*N+c+off2] ) * creal( Matrices[c*N+a+off3] );
-        trace -= cimag( Matrices[a*N+b+off1] ) * cimag( Matrices[b*N+c+off2] ) * creal( Matrices[c*N+a+off3] );
-        trace -= creal( Matrices[a*N+b+off1] ) * cimag( Matrices[b*N+c+off2] ) * cimag( Matrices[c*N+a+off3] );
-        trace -= cimag( Matrices[a*N+b+off1] ) * creal( Matrices[b*N+c+off2] ) * cimag( Matrices[c*N+a+off3] );
+          trace += cimag( Matrices[ offset1 + i * length + j ] ) *
+                   cimag( Matrices[ offset2 + j * length + k ] ) *
+                   cimag( Matrices[ offset3 + k * length + l ] ) *
+                   cimag( Matrices[ offset4 + l * length + i ] );
+
+          trace -= creal( Matrices[ offset1 + i * length + j ] ) *
+                   creal( Matrices[ offset2 + j * length + k ] ) *
+                   cimag( Matrices[ offset3 + k * length + l ] ) *
+                   cimag( Matrices[ offset4 + l * length + i ] );
+
+          trace -= creal( Matrices[ offset1 + i * length + j ] ) *
+                   cimag( Matrices[ offset2 + j * length + k ] ) *
+                   creal( Matrices[ offset3 + k * length + l ] ) *
+                   cimag( Matrices[ offset4 + l * length + i ] );
+
+          trace -= cimag( Matrices[ offset1 + i * length + j ] ) *
+                   creal( Matrices[ offset2 + j * length + k ] ) *
+                   creal( Matrices[ offset3 + k * length + l ] ) *
+                   cimag( Matrices[ offset4 + l * length + i ] );
+
+          trace -= creal( Matrices[ offset1 + i * length + j ] ) *
+                   cimag( Matrices[ offset2 + j * length + k ] ) *
+                   cimag( Matrices[ offset3 + k * length + l ] ) *
+                   creal( Matrices[ offset4 + l * length + i ] );
+
+          trace -= cimag( Matrices[ offset1 + i * length + j ] ) *
+                   creal( Matrices[ offset2 + j * length + k ] ) *
+                   cimag( Matrices[ offset3 + k * length + l ] ) *
+                   creal( Matrices[ offset4 + l * length + i ] );
+
+          trace -= cimag( Matrices[ offset1 + i * length + j ] ) *
+                   cimag( Matrices[ offset2 + j * length + k ] ) *
+                   creal( Matrices[ offset3 + k * length + l ] ) *
+                   creal( Matrices[ offset4 + l * length + i ] );
+        }
       }
     }
   }
@@ -211,7 +330,14 @@ double tr_H2(
 
 /**********************************************************************************************/
 
-// Calculate the action Tr D^2
+/*********************************************************************************/
+/********                                                                *********/
+/********                      ACTION S = Tr D^2                         *********/
+/********                                                                *********/
+/*********************************************************************************/
+
+// FIXME: Eliminate global variables
+// Calculate the full action S = Tr D^2
 double traceD2(
     REAL complex const *Matrices, // Array of all matrices
     int const num_h,              // number of matrices of H_TYPE
@@ -247,26 +373,6 @@ double traceD2(
 
   return 2 * K * ( N * sum_trace_H2 + sum_trace_H_sq );
 }
-
-
-double traceD4(
-    REAL complex const *Matrices, // Array of all matrices
-    int const num_h,              // number of matrices of H_TYPE
-    int const num_l,              // number of matrices of L_TYPE
-    int const length              // side length of all matrices
-    )
-{
-  // TODO: Implement me!
-  return 0;
-}
-
-/**********************************************************************************************/
-
-/*********************************************************************************/
-/********                                                                *********/
-/********                      ACTION S = Tr D^2                         *********/
-/********                                                                *********/
-/*********************************************************************************/
 
 // FIXME: Eliminate global variables
 // Calculate the change of the action S = Tr D^2,
@@ -330,6 +436,40 @@ double deltaS_traceD2(
 /********                                                                *********/
 /*********************************************************************************/
 
+double traceD4(
+    REAL complex const *Matrices, // Array of all matrices
+    int const num_h,              // number of matrices of H_TYPE
+    int const num_l,              // number of matrices of L_TYPE
+    int const n,                  // side length of all matrices
+    int const k                   // dimension k of gamma matrices
+    )
+{
+  //-----------------------------------------------------------------------------//
+  // Calculating the action:                                                     //
+  //                                                                             //
+  // S = Tr D^4                                                                  //
+  //   = 2 k \sum_A [ N Tr(A^4) + 4 Tr(A) Tr(A^3) + 3 (Tr(A^2))^2 ]  ---> part I //
+  //                                                                             //
+  //-----------------------------------------------------------------------------//
+
+  double partI = 0.0;
+
+  for( size_t posA = 0; posA < num_h + num_l; ++posA )
+  {
+    double const TrA1 = tr1( Matrices, num_h, num_l, n, posA );
+    double const TrA2 = tr2( Matrices, num_h, num_l, n, posA, posA );
+    double const TrA3 = tr3( Matrices, num_h, num_l, n, posA, posA, posA );
+    double const TrA4 = tr4( Matrices, num_h, num_l, n, posA, posA, posA, posA );
+
+    partI += n * TrA4 + 4 * TrA1 * TrA3 + 3 * TrA2 * TrA2;
+  }
+
+  partI *= 2 * k;
+
+  double const action = partI;
+  return action;
+}
+
 double delta_action_traceD4(REAL complex *Matrices, int positionA, REAL complex temp, int pos_x, int pos_y, int *sigmaAB, int **sigmaABCD, int NUM_H, int NUM_L)
 {
   int off = positionA * SWEEP;
@@ -389,8 +529,8 @@ double delta_action_traceD4(REAL complex *Matrices, int positionA, REAL complex 
   c = creal(old);
   d = cimag(old);
 
-  trA  = tr1(Matrices, positionA, NUM_H);
-  trA2 = tr2(Matrices, positionA, positionA);
+  trA  = tr1(Matrices, NUM_H, NUM_L, N, positionA);
+  trA2 = tr2(Matrices, NUM_H, NUM_L, N, positionA, positionA);
   A_ii = creal( Matrices[pos_x*N+pos_x+off] );
   A_jj = creal( Matrices[pos_y*N+pos_y+off] );
 
@@ -453,9 +593,9 @@ double delta_action_traceD4(REAL complex *Matrices, int positionA, REAL complex 
       sgnB = positionB < NUM_H ? 1 : -1;
       offB = positionB * SWEEP;
 
-      trB  = tr1(Matrices, positionB, NUM_H);
-      trB2 = tr2(Matrices, positionB, positionB);
-      trAB = tr2(Matrices, positionA, positionB);
+      trB  = tr1(Matrices, NUM_H, NUM_L, N, positionB);
+      trB2 = tr2(Matrices, NUM_H, NUM_L, N, positionB, positionB);
+      trAB = tr2(Matrices, NUM_H, NUM_L, N, positionA, positionB);
 
       c_B  = creal( Matrices[pos_upper+offB] );
       d_B  = cimag( Matrices[pos_upper+offB] );
@@ -538,14 +678,14 @@ double delta_action_traceD4(REAL complex *Matrices, int positionA, REAL complex 
       d_D = cimag( Matrices[pos_upper+offD] );
 
       /* Traces over one matrix: */
-      trB = tr1(Matrices, positionB, NUM_H);
-      trC = tr1(Matrices, positionC, NUM_H);
-      trD = tr1(Matrices, positionD, NUM_H);
+      trB = tr1(Matrices, NUM_H, NUM_L, N, positionB);
+      trC = tr1(Matrices, NUM_H, NUM_L, N, positionC);
+      trD = tr1(Matrices, NUM_H, NUM_L, N, positionD);
 
       /* Traces over two matrices: */
-      trABtrCD = (a * c_B + b * d_B) * tr2(Matrices, positionC, positionD);
-      trACtrBD = (a * c_C + b * d_C) * tr2(Matrices, positionB, positionD);
-      trADtrBC = (a * c_D + b * d_D) * tr2(Matrices, positionB, positionC);
+      trABtrCD = (a * c_B + b * d_B) * tr2(Matrices, NUM_H, NUM_L, N, positionC, positionD);
+      trACtrBD = (a * c_C + b * d_C) * tr2(Matrices, NUM_H, NUM_L, N, positionB, positionD);
+      trADtrBC = (a * c_D + b * d_D) * tr2(Matrices, NUM_H, NUM_L, N, positionB, positionC);
 
       /* Traces over one and three matrices: */
       if(sgnB==1) {
@@ -613,7 +753,7 @@ double delta_action_traceD4(REAL complex *Matrices, int positionA, REAL complex 
 
     sum[0] = row_norm_squared(Matrices, positionA, pos_x);
     sum[1] = tr3_real_ij(Matrices, positionA, positionA, positionA, pos_x, pos_x);
-    if(sgnA==1) sum[2] = tr3(Matrices, positionA, positionA, positionA);
+    if(sgnA==1) sum[2] = tr3(Matrices, NUM_H, NUM_L, N, positionA, positionA, positionA);
     else        sum[2] = 0;
 
     F = a*a + 2*a*c;
@@ -642,10 +782,10 @@ double delta_action_traceD4(REAL complex *Matrices, int positionA, REAL complex 
       sgnB = positionB < NUM_H ? 1 : -1;
       offB = positionB * SWEEP;
 
-      trB   = tr1(Matrices, positionB, NUM_H);
-      trB2  = tr2(Matrices, positionB, positionB);
-      trAB  = tr2(Matrices, positionA, positionB);
-      if(sgnA==1) trAB2 = tr3(Matrices, positionA, positionB, positionB);
+      trB  = tr1(Matrices, NUM_H, NUM_L, N, positionB);
+      trB2 = tr2(Matrices, NUM_H, NUM_L, N, positionB, positionB);
+      trAB = tr2(Matrices, NUM_H, NUM_L, N, positionA, positionB);
+      if(sgnA==1) trAB2 = tr3(Matrices, NUM_H, NUM_L, N, positionA, positionB, positionB);
       else        trAB2 = 0;
 
       c_B = creal( Matrices[pos_upper+offB] );
@@ -707,19 +847,19 @@ double delta_action_traceD4(REAL complex *Matrices, int positionA, REAL complex 
       c_D = creal( Matrices[pos_upper+offD] );
 
       /* Traces over one matrix: */
-      trB = tr1(Matrices, positionB, NUM_H);
-      trC = tr1(Matrices, positionC, NUM_H);
-      trD = tr1(Matrices, positionD, NUM_H);
+      trB = tr1(Matrices, NUM_H, NUM_L, N, positionB);
+      trC = tr1(Matrices, NUM_H, NUM_L, N, positionC);
+      trD = tr1(Matrices, NUM_H, NUM_L, N, positionD);
 
       /* Traces over two matrices: */
-      trABtrCD = c_B * tr2(Matrices, positionC, positionD);
-      trACtrBD = c_C * tr2(Matrices, positionB, positionD);
-      trADtrBC = c_D * tr2(Matrices, positionB, positionC);
+      trABtrCD = c_B * tr2(Matrices, NUM_H, NUM_L, N, positionC, positionD);
+      trACtrBD = c_C * tr2(Matrices, NUM_H, NUM_L, N, positionB, positionD);
+      trADtrBC = c_D * tr2(Matrices, NUM_H, NUM_L, N, positionB, positionC);
 
       /* Traces over one and three matrices: */
       if(sgnA==1) {
-        trF1 = (b1+c2+d1)*tr3(Matrices, positionB, positionC, positionD);
-        trF1+= (b2+c1+d2)*tr3(Matrices, positionC, positionB, positionD);
+        trF1 = (b1+c2+d1)*tr3(Matrices, NUM_H, NUM_L, N, positionB, positionC, positionD);
+        trF1+= (b2+c1+d2)*tr3(Matrices, NUM_H, NUM_L, N, positionC, positionB, positionD);
       } else {
         trF1 = 0;
       }
