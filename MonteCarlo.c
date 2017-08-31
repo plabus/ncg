@@ -66,22 +66,22 @@ void random_matrices(
     )
 {
   // Unpack property parameters
-  size_t const num_h  = prop.num_h;
-  size_t const num_l  = prop.num_l;
-  size_t const length = prop.n;
+  size_t const num_h = prop.num_h;
+  size_t const num_l = prop.num_l;
+  size_t const n     = prop.n;
 
   // All matrices of H_TYPE
-  for( uint64_t n = 0; n < num_h; ++n )
+  for( uint64_t m = 0; m < num_h; ++m )
   {
-    uint64_t const offset = n * length * length;
-    random_matrix( &rng[n], &Ms[offset], length, step_length_diag_h, step_length_off_h, H_TYPE );
+    uint64_t const offset = m * n * n;
+    random_matrix( &rng[m], &Ms[offset], n, step_length_diag_h, step_length_off_h, H_TYPE );
   }
 
   // All matrices of L_TYPE
-  for( uint64_t n = num_h; n < num_h + num_l; ++n )
+  for( uint64_t m = num_h; m < num_h + num_l; ++m )
   {
-    uint64_t const offset = n * length * length;
-    random_matrix( &rng[n], &Ms[offset], length, step_length_diag_l, step_length_off_l, L_TYPE );
+    uint64_t const offset = m * n * n;
+    random_matrix( &rng[m], &Ms[offset], n, step_length_diag_l, step_length_off_l, L_TYPE );
   }
 }
 
@@ -145,10 +145,17 @@ struct Matrix_State Generate_Candidate(
   // Diagonal case
   else
   {
-    // FIXME: Shall we ensure here that L's remain trace-less?
-    // (This is however used when evaluating S and deltaS)
     temp = step_size * signed_uniform( rng ) + I * 0.0;
     Matrices[ offset + pos_upper ] += temp;
+
+    // FIXME: Ensure traceless-ness, but be careful when restoring result!
+    // // For L_TYPE ensure that the trace remains zero
+    // enum Matrix_Type const type = matrix < parameters.num_h ? H_TYPE : L_TYPE;
+    // if( type == L_TYPE )
+    // {
+    //   const int pos_diag = uniform_int( rng, length );
+    //   Matrices[ offset + pos_diag * length + pos_diag ] -= temp;
+    // }
   }
 
   return old_state;

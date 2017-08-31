@@ -61,31 +61,31 @@ double Matrices_Initialisation(
 
 // Generate a new Monte Carlo candidate by changing one matrix element in one matrix
 struct Matrix_State Generate_Candidate(
-    struct pcg32_random_t *rng,                // pointer to one rng
-    REAL complex *Matrices,                    // array of matrices
-    struct Matrix_Properties const parameters, // includes num_h, num_l, n and k
-    const double step_size,                    // length of each Monte Carlo step
-    const int matrix                           // in which matrix an element should be changed
+    struct pcg32_random_t *rng,          // pointer to one rng
+    REAL complex *Matrices,              // array of matrices
+    struct Matrix_Properties const prop, // includes num_h, num_l, n and k
+    const double step_size,              // length of each Monte Carlo step
+    const int matrix                     // in which matrix an element should be changed
     );
 
 // Restore the Matrices as they have been before using Generate_Candidate
 void Restore_Matrices(
-    REAL complex *Matrices,                    // array of matrices
-    struct Matrix_Properties const parameters, // includes num_h, num_l, n and k
-    const struct Matrix_State old              // old state
+    REAL complex *Matrices,              // array of matrices
+    struct Matrix_Properties const prop, // includes num_h, num_l, n and k
+    const struct Matrix_State old        // old state
     );
 
 // For each of the NUM_H + NUM_L matrices generate a new matrix
 // with exactly one entry changed and make a accept/reject step
 // individually. The acceptance counter is update for each matrix
 void Get_Next_MCMC_Element(
-    struct pcg32_random_t *rng,                // array of rng's, one for each matrix
-    REAL complex *Matrices,                    // array of matrices
-    struct Matrix_Properties const parameters, // includes num_h, num_l, n and k
-    int *sigmaAB,                              // pre-calculated Clifford products of 2 Gamma matrices
-    int **sigmaABCD,                           // pre-calculated Clifford products of 4 Gamma matrices
-    uint64_t* accepted,                        // pointer to number of accepted steps
-    const double step_size                     // length of each Monte Carlo step
+    struct pcg32_random_t *rng,          // array of rng's, one for each matrix
+    REAL complex *Matrices,              // array of matrices
+    struct Matrix_Properties const prop, // includes num_h, num_l, n and k
+    int *sigmaAB,                        // pre-calculated Clifford products of 2 Gamma matrices
+    int **sigmaABCD,                     // pre-calculated Clifford products of 4 Gamma matrices
+    uint64_t* accepted,                  // pointer to number of accepted steps
+    const double step_size               // length of each Monte Carlo step
     );
 
 // Tune the step size based on some acceptance rate measured

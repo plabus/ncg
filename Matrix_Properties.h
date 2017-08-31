@@ -7,6 +7,8 @@ struct Matrix_Properties
   size_t num_l;
   size_t n;
   size_t k;
+  double g2;
+  double g4;
 };
 
 #endif

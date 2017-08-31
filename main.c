@@ -93,7 +93,9 @@ int main()
     .num_h = NUM_H,
     .num_l = NUM_L,
     .n = N,
-    .k = K
+    .k = K,
+    .g2 = G2,
+    .g4 = G4
   };
   double action = Matrices_Initialisation( rngs, Matrices, parameters );
 

@@ -336,13 +336,10 @@ double tr_H2(
 /********                                                                *********/
 /*********************************************************************************/
 
-// FIXME: Eliminate global variables
 // Calculate the full action S = Tr D^2
 double traceD2(
-    REAL complex const *Matrices, // Array of all matrices
-    int const num_h,              // number of matrices of H_TYPE
-    int const num_l,              // number of matrices of L_TYPE
-    uint64_t const length         // side length of all matrices
+    REAL complex const *Matrices,       // Array of all matrices
+    struct Matrix_Properties const prop // includes num_h, num_l, n and k
     )
 {
   //------------------------------------------------------//
@@ -350,47 +347,52 @@ double traceD2(
   // S = Tr D^2 = 2 k [ N \sum Tr(H^2) + \sum (Tr H)^2 ]  //
   //------------------------------------------------------//
 
+  // Unpack property parameters
+  size_t const num_h = prop.num_h;
+  size_t const num_l = prop.num_l;
+  size_t const n     = prop.n;
+  size_t const k     = prop.k;
+
   // For the Tr H^2 part
   // -------------------
   double sum_trace_H2 = 0.0;
 
-  for( uint64_t n = 0; n < num_h + num_l; ++n )  // This is for all matrices H and L
+  for( uint64_t m = 0; m < num_h + num_l; ++m )  // This is for all matrices H and L
   {
-    uint64_t const offset = n * length * length;
-    sum_trace_H2 += tr_H2( &Matrices[offset], length );
+    uint64_t const offset = m * n * n;
+    sum_trace_H2 += tr_H2( &Matrices[offset], n );
   }
 
   // For the (Tr H)^2 part
   // ---------------------
   double sum_trace_H_sq  = 0.0;
 
-  for( uint64_t n = 0; n < num_h; ++n )  // This is for matrices H only
+  for( uint64_t m = 0; m < num_h; ++m )  // This is for matrices H only
   {
-    uint64_t const offset = n * length * length;
-    double const trace_H = tr_H( &Matrices[offset], length );
+    uint64_t const offset = m * n * n;
+    double const trace_H = tr_H( &Matrices[offset], n );
     sum_trace_H_sq += trace_H * trace_H;
   }
 
-  return 2 * K * ( N * sum_trace_H2 + sum_trace_H_sq );
+  return 2 * k * ( n * sum_trace_H2 + sum_trace_H_sq );
 }
 
-// FIXME: Eliminate global variables
 // Calculate the change of the action S = Tr D^2,
 // if in one matrix one element is changed (t),
 // where the matrix is in its already changed state
 double deltaS_traceD2(
-    REAL complex *Matrices,        // array of matrices
-    const int num_h,               // number of matrices of H_TYPE
-    const int num_l,               // number of matrices of L_TYPE
-    const int length,              // side length N of one matrix in Matrices (the same for all matrices)
-    const struct Matrix_State old  // old state
+    REAL complex *Matrices,              // array of matrices
+    struct Matrix_Properties const prop, // includes num_h, num_l, n and k
+    const struct Matrix_State old        // old state
     )
 {
   // Unpack needed information
-  enum Matrix_Type const type = old.matrix < num_h ? H_TYPE : L_TYPE;
-  int const offset = old.matrix * length * length;
-  int const pos_upper = old.pos_upper;
-  int const pos_lower = old.pos_lower;
+  const size_t n              = prop.n;
+  const size_t k              = prop.k;
+  const enum Matrix_Type type = old.matrix < prop.num_h ? H_TYPE : L_TYPE;
+  const size_t offset            = old.matrix * n * n;
+  const size_t pos_upper         = old.pos_upper;
+  const size_t pos_lower         = old.pos_lower;
 
   // Unpack matrix elements involved in calculating delta S,
   // where t = H_new - H_old (at upper triangular position)
@@ -403,7 +405,7 @@ double deltaS_traceD2(
   // ------------------
   if( pos_upper != pos_lower )
   {
-    return 4 * K * length * (
+    return 4 * k * n * (
         2 * ( t_Re * H_new_ij_Re + t_Im * H_new_ij_Im ) - ( t_Re * t_Re + t_Im * t_Im )
         );
   }
@@ -414,15 +416,15 @@ double deltaS_traceD2(
     // H_TYPE:
     if( type == H_TYPE )
     {
-      const double tr_H_new = tr_H( &Matrices[offset], length );
-      return 2 * K * (
-          length * ( 2 * t_Re * H_new_ij_Re - t_Re * t_Re ) + ( 2 * t_Re * tr_H_new - t_Re * t_Re )
+      const double tr_H_new = tr_H( &Matrices[offset], n );
+      return 2 * k * (
+          n * ( 2 * t_Re * H_new_ij_Re - t_Re * t_Re ) + ( 2 * t_Re * tr_H_new - t_Re * t_Re )
           );
     }
     // L_TYPE:
     else
     {
-      return 2 * K * length * (
+      return 2 * k * n * (
           2 * ( t_Re * H_new_ij_Re + t_Im * H_new_ij_Im ) - ( t_Re * t_Re + t_Im * t_Im )
           );
     }
@@ -437,11 +439,8 @@ double deltaS_traceD2(
 /*********************************************************************************/
 
 double traceD4(
-    REAL complex const *Matrices, // Array of all matrices
-    int const num_h,              // number of matrices of H_TYPE
-    int const num_l,              // number of matrices of L_TYPE
-    int const n,                  // side length of all matrices
-    int const k                   // dimension k of gamma matrices
+    REAL complex const *Matrices,       // Array of all matrices
+    struct Matrix_Properties const prop // includes num_h, num_l, n and k
     )
 {
   //-----------------------------------------------------------------------------//
@@ -451,6 +450,12 @@ double traceD4(
   //   = 2 k \sum_A [ N Tr(A^4) + 4 Tr(A) Tr(A^3) + 3 (Tr(A^2))^2 ]  ---> part I //
   //                                                                             //
   //-----------------------------------------------------------------------------//
+
+  // Unpack property parameters
+  size_t const num_h = prop.num_h;
+  size_t const num_l = prop.num_l;
+  size_t const n     = prop.n;
+  size_t const k     = prop.k;
 
   double partI = 0.0;
 
@@ -470,7 +475,17 @@ double traceD4(
   return action;
 }
 
-double delta_action_traceD4(REAL complex *Matrices, int positionA, REAL complex temp, int pos_x, int pos_y, int *sigmaAB, int **sigmaABCD, int NUM_H, int NUM_L)
+double delta_action_traceD4(
+    REAL complex *Matrices,
+    int positionA,
+    REAL complex temp,
+    int pos_x,
+    int pos_y,
+    int *sigmaAB,
+    int **sigmaABCD,
+    int NUM_H,
+    int NUM_L
+    )
 {
   int off = positionA * SWEEP;
   int offB, offC, offD;
@@ -899,8 +914,6 @@ double delta_action_traceD4(REAL complex *Matrices, int positionA, REAL complex 
   return 2*K*(delta1+delta2+4*delta3);
 }
 
-// FIXME: Eliminate G2 and G4 as global variables
-// (Should this be added to the Matrix_Properties struct?)
 // Wrapper function for the full action:
 // calculates S = g2 * Tr(D^2) + g4 * Tr(D^4)
 double Calculate_Action(
@@ -908,6 +921,5 @@ double Calculate_Action(
     struct Matrix_Properties const prop // includes num_h, num_l, n and k
     )
 {
-  return G2 * traceD2( Matrices, prop.num_h, prop.num_l, prop.n )
-       + G4 * traceD4( Matrices, prop.num_h, prop.num_l, prop.n, prop.k );
+  return prop.g2 * traceD2( Matrices, prop ) + prop.g4 * traceD4( Matrices, prop );
 }

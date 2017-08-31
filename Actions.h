@@ -69,19 +69,14 @@ double tr_H2(
 
 // Calculate the action Tr D^2
 double traceD2(
-    REAL complex const *Matrices, // Array of all matrices
-    int const num_h,              // number of matrices of H_TYPE
-    int const num_l,              // number of matrices of L_TYPE
-    uint64_t const length              // side length of all matrices
+    REAL complex const *Matrices,       // Array of all matrices
+    struct Matrix_Properties const prop // includes num_h, num_l, n and k
     );
 
 // Calculate the action Tr D^4
 double traceD4(
-    REAL complex const *Matrices, // Array of all matrices
-    int const num_h,              // number of matrices of H_TYPE
-    int const num_l,              // number of matrices of L_TYPE
-    int const n,                  // side length of all matrices
-    int const k                   // dimension k of gamma matrices
+    REAL complex const *Matrices,       // Array of all matrices
+    struct Matrix_Properties const prop // includes num_h, num_l, n and k
     );
 
 // Wrapper function for the full action:
@@ -95,11 +90,9 @@ double Calculate_Action(
 // if in one matrix one element is changed (t),
 // where the matrix is in its already changed state
 double deltaS_traceD2(
-    REAL complex *Matrices,        // array of matrices
-    const int num_h,               // number of matrices of H_TYPE
-    const int num_l,               // number of matrices of L_TYPE
-    const int length,              // side length N of one matrix in Matrices (the same for all matrices)
-    const struct Matrix_State old  // old state
+    REAL complex *Matrices,              // array of matrices
+    struct Matrix_Properties const prop, // includes num_h, num_l, n and k
+    const struct Matrix_State old        // old state
     );
 
 double delta_action_traceD4(REAL complex *Matrices, int positionA, REAL complex temp, int pos_x, int pos_y, int *sigmaAB, int **sigmaABCD, int NUM_H, int NUM_L);
