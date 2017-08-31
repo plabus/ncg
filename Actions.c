@@ -898,3 +898,16 @@ double delta_action_traceD4(REAL complex *Matrices, int positionA, REAL complex 
 
   return 2*K*(delta1+delta2+4*delta3);
 }
+
+// FIXME: Eliminate G2 and G4 as global variables
+// (Should this be added to the Matrix_Properties struct?)
+// Wrapper function for the full action:
+// calculates S = g2 * Tr(D^2) + g4 * Tr(D^4)
+double action(
+    REAL complex const *Matrices,       // array of matrices
+    struct Matrix_Properties const prop // includes num_h, num_l, n and k
+    )
+{
+  return G2 * traceD2( Matrices, prop.num_h, prop.num_l, prop.n )
+       + G4 * traceD4( Matrices, prop.num_h, prop.num_l, prop.n, prop.k );
+}

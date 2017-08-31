@@ -84,6 +84,13 @@ double traceD4(
     int const k                   // dimension k of gamma matrices
     );
 
+// Wrapper function for the full action:
+// calculates S = g2 * Tr(D^2) + g4 * Tr(D^4)
+double action(
+    REAL complex const *Matrices,       // array of matrices
+    struct Matrix_Properties const prop // includes num_h, num_l, n and k
+    );
+
 // Calculate the change of the action S = Tr D^2,
 // if in one matrix one element is changed (t),
 // where the matrix is in its already changed state
