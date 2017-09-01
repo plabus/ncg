@@ -1,0 +1,393 @@
+\documentclass[10pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[english]{babel}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{mathtools}
+\usepackage{breqn}
+\usepackage{bbold}
+\usepackage{mathrsfs}
+\usepackage{empheq}
+
+\usepackage{graphicx}
+\usepackage[font=footnotesize,labelfont=bf]{caption}
+\usepackage{subcaption}
+
+\newcommand\ptwid[1]{\mathord{\mathop{#1}\limits^{\scriptscriptstyle(\sim)}}}
+\newcommand\twid[1]{\mathord{\mathop{#1}\limits^{\scriptscriptstyle\sim}}}
+\newcommand{\RN}[1]{%
+    \textup{\uppercase\expandafter{\romannumeral#1}}%
+}
+\DeclareMathOperator{\Tr}{Tr}
+
+\newcommand{\deltaA}{\delta \! A}
+
+\author{Peter Labus}
+\title{Documentation MCMC software}
+
+
+\begin{document}
+\maketitle
+
+We always use $L_A \equiv i \twid H_A$ such that $\twid H_A$
+is hermitian and traceless.
+Note also that the ``twiddled'' matrices are always inside
+commutators $[\cdot,\cdot] \equiv \{\cdot,\cdot\}_{-}\,$.
+
+\section{Actions}
+
+Free action
+\begin{equation}
+  \Tr D^2 = 2kN \sum_{A}  \Tr \ptwid H_A^2
+  + 2k \sum_{B}  ( \Tr H_B )^2
+\end{equation}
+Interacting action
+\begin{equation}
+  \Tr D^4 = \sum_{\mathclap{A,B,C,D=1}}^{2^{D-1}} \; i^{\sum (\sim)}  \Tr \left(\Gamma^A \Gamma^B \Gamma^C \Gamma^D \right)
+ \Tr \left( \{ \ptwid H_A, \cdot \}_{\pm}
+ \{ \ptwid H_B, \cdot \}_{\pm}
+ \{ \ptwid H_C, \cdot \}_{\pm}
+ \{ \ptwid H_D, \cdot \}_{\pm} \right)
+\end{equation}
+This can be split in traces over four identical matrices, traces over
+pairs of identical matrices and traces with
+four pairwise different matrices.
+\begin{align}
+  \Tr D^4 &= k \sum_{A} \; \Tr \left( \{ \ptwid H_A, \cdot \}_{\pm}^4 \right) +
+4k \sum_{A<B} \; \sigma_{AB}
+\Tr \left( \{ \ptwid H_A, \cdot \}_{\pm}^2   \{ \ptwid H_B, \cdot \}_{\pm}^2 \right) \\
+&+ 2k \sum_{A<B} \; \sigma_{AB}
+\Tr \left( \{ \ptwid H_A, \cdot \}_{\pm}   \{ \ptwid H_B, \cdot \}_{\pm} \right)^2 \\
+&+ 4k
+\sum_{\mathclap{\substack{A<B,C,D,\\ \text{pairwise different}  }}} \;
+\sigma_{ABCD}  \Tr \left( \{ \ptwid H_A, \cdot \}_{\pm}   \{ \ptwid H_B, \cdot \}_{\pm}
+\{ \ptwid H_C, \cdot \}_{\pm}   \{ \ptwid H_D, \cdot \}_{\pm} \right)
+\end{align}
+where the coefficients
+\begin{align}
+\sigma_{AB} &=  (-)^{A+B} \, \frac{1}{k} \, \Tr \left(\Gamma^A \Gamma^B \Gamma^A \Gamma^B \right) \in \{\pm 1\}\\
+  \sigma_{ABCD} &=  i^{\sum (\sim)} \, \frac{1}{k} \, \Tr \left(\Gamma^A \Gamma^B \Gamma^C \Gamma^D \right) \in \{\pm 1, \pm i\}
+\end{align}
+can be pre-computed\footnote{%
+  I could not find an analytic expression. Pre-computation however does not cost much in terms of execution time.
+}
+and
+\begin{align}
+(-)^A =
+\begin{cases}
++1, &A \in \{ H_i \}\\
+-1, &A \in \{ \tilde H_i \}
+\end{cases}
+\end{align}
+Next note that for
+\begin{align}
+P =  \{ \ptwid A, \cdot \}_{\pm}   \{ \ptwid B, \cdot \}_{\pm}
+\{ \ptwid C, \cdot \}_{\pm}   \{ \ptwid D, \cdot \}_{\pm}
+\end{align}
+we have
+\begin{align}
+  &\Tr P = N \left[ 1+(-)^{A+B+C+D} \right] \Tr \ptwid A \ptwid B \ptwid C \ptwid D + \\
+  &+ \left[ (-)^A + (-)^{B+C+D} \right] \Tr \ptwid A \Tr \ptwid B \ptwid C \ptwid D +
+  \left[ (-)^B + (-)^{A+C+D} \right] \Tr \ptwid B \Tr \ptwid A \ptwid C \ptwid D + \\
+  &+ \left[ (-)^C + (-)^{A+B+D} \right] \Tr \ptwid C \Tr \ptwid A \ptwid B \ptwid D +
+  \left[ (-)^D + (-)^{A+B+C} \right] \Tr \ptwid D \Tr \ptwid A \ptwid B \ptwid C + \\
+  &+ \left[ (-)^{A+B} + (-)^{C+D} \right] \Tr \ptwid A \ptwid B \Tr \ptwid C \ptwid D +
+  \left[ (-)^{A+C} + (-)^{B+D} \right] \Tr \ptwid A \ptwid C \Tr \ptwid B \ptwid D + \\
+  &+ \left[ (-)^{A+D} + (-)^{B+C} \right] \Tr \ptwid A \ptwid D \Tr \ptwid B \ptwid C
+\end{align}
+In particular $\Tr P = 0$ for $(-)^{A+B+C+D}=-1$. Making use of the tracelessness of the ``twiddled'' matrices we can further simplify
+\begin{align}
+  \Tr P = 2 \, \bigg[ N \Tr \ptwid A \ptwid B \ptwid C \ptwid D +
+\Tr A \Tr \ptwid B \ptwid C \ptwid D +
+\Tr B \Tr \ptwid A \ptwid C \ptwid D + \\
++ \Tr C \Tr \ptwid A \ptwid B \ptwid D +
+\Tr D \Tr \ptwid A \ptwid B \ptwid C +
+(-)^{A+B} \Tr \ptwid A \ptwid B \Tr \ptwid C \ptwid D + \\
++ (-)^{A+C} \Tr \ptwid A \ptwid C \Tr \ptwid B \ptwid D +
+(-)^{A+D} \Tr \ptwid A \ptwid D \Tr \ptwid B \ptwid C \bigg]
+\end{align}
+and non-vanishing terms with traces of four different matrices will
+always have $\sigma_{ABCD} = \pm 1$.
+
+Let us now denote the part of the action composed out of terms with traces
+involving at \textit{least} one fixed matrix (say $A$) with $S(A)$.
+Then combining the previous results one gets
+\begin{align}
+  \frac{S(A)}{2k} &= N \Tr A^4 + 4 \Tr A \Tr A^3 + 3 (Tr A^2)^2 + \\
+  &+ \sum_{B \neq A} \bigg[ 4N\Tr A^2 \ptwid H_B^2
+    + 2 \sigma_{AB}N \Tr A \ptwid H_B A \ptwid H_B \\
+    &\quad+ (8+4\sigma_{AB}) \Tr A \Tr A \ptwid H_B^2
+    + (8+4\sigma_{AB}) \Tr H_B \Tr A^2 H_B \\
+    &\quad+ (4+2\sigma_{AB}) \Tr A^2 \Tr \ptwid H_B^2
+  + (-)^{A+H_B} (8+4\sigma_{AB}) (\Tr A \ptwid H_B)^2 \bigg] + \\
+  &+ 4 \sum_{\mathclap{\substack{B < C < D\\A \not \in \{B,C,D\} }}}
+  \;\;
+  \bigg[
+    N \Tr A E +
+    \Tr A \Tr F_1 +
+    \Tr H_B \Tr F_2 +
+    \Tr H_C \Tr F_3 \\
+    &\quad+
+    \Tr H_D \Tr F_4 +
+    s \bigg(
+      (-)^{A+H_B} \Tr A \ptwid H_B \Tr \ptwid H_C \ptwid H_D \\
+      &\quad+     (-)^{A+H_C} \Tr A \ptwid H_C \Tr \ptwid H_B \ptwid H_D +
+      (-)^{A+H_D} \Tr A \ptwid H_D \Tr \ptwid H_B \ptwid H_C
+    \bigg)
+  \bigg]
+\end{align}
+where
+\begin{align}
+  E &\equiv
+  (b_1 + d_2) \ptwid H_B \ptwid H_C \ptwid H_D +
+  (b_2 + c_2) \ptwid H_B \ptwid H_D \ptwid H_C +
+  (c_1 + d_1) \ptwid H_C \ptwid H_B \ptwid H_D \\
+  F_1 &\equiv
+    (b_1+c_2+d_1) \Tr \ptwid H_B \ptwid H_C \ptwid H_D +
+    (b_2+c_1+d_2) \Tr \ptwid H_B \ptwid H_D \ptwid H_C \\
+  F_2 &\equiv
+    (b_1+c_1+c_2) \Tr A \ptwid H_C \ptwid H_D +
+    (b_2+d_1+d_2) \Tr A \ptwid H_D \ptwid H_C \\
+  F_3 &\equiv
+    (b_1+b_2+c_1) \Tr A \ptwid H_B \ptwid H_D +
+    (c_2+d_1+d_2) \Tr A \ptwid H_D \ptwid H_B \\
+  F_4 &\equiv
+    (b_1+b_2+d_1) \Tr A \ptwid H_B \ptwid H_C +
+    (c_1+c_2+d_2) \Tr A \ptwid H_C \ptwid H_B
+\end{align}
+and
+\begin{align}
+  b_1 &= \sigma_{ABCD},\; b_2 = \sigma_{ABDC}, \\
+  c_1 &= \sigma_{ACBD},\; c_2 = \sigma_{ACDB}, \\
+  d_1 &= \sigma_{ADBC},\; d_2 = \sigma_{ADCB}, \\
+  s &= b_1 + b_2 + c_1 + c_2 + d_1 + d_2
+\end{align}
+To simplify the last sum we have used the observation that for
+any fixed matrix $A$ and non-vanishing $\sigma_{ABCD}$ there are
+actually six non-vanishing terms with the same matrices $B$, $C$
+and $D$ that can be combined. These six terms can be combined into
+three pairs of two using the general expression
+\begin{align}
+  \Tr ABCD = \Tr \overline{ADCB}
+\end{align}
+that is valid for any hermitian matrices $A$, $B$, $C$ and $D$.
+The last sum runs then over all distinct quadruples for which
+$\sigma_{ABCD}$ is non-zero.
+In $d=4$ there are three such terms, 15 in $d=5$, 75 in $d=6$
+and 315 in $d=7$.
+
+\newpage
+
+If we choose to generate a new Markov chain element by changing one
+matrix element at some random position $(i,j)$ the above formul\ae~
+simplify considerably.
+Let us denote the new matrix by
+\begin{align}
+  A^{\text{new}} = A^{\text{old}} + \deltaA
+\end{align}
+where $\deltaA$ is zero everywhere except at positions $(i,j)$ and
+$(j,i)$ and in the following we will write
+\begin{align}
+  \deltaA_{ij} = A_{ij}^{\text{new}} - A_{ij}^{\text{old}}
+  \equiv a + bi, \;\; i<j
+\end{align}
+as well as
+\begin{align}
+  A^{\text{old}} \equiv A, \; A_{ij}
+  \equiv c + di
+\end{align}
+Then we can write the difference of the action $\Delta S = S^{\text{new}}
+- S^{\text{old}}$ for some given matrix $A$ in terms of traces of
+all matrices and $\deltaA$.
+The first part (involving four matrices $A$) then reads
+\begin{align}
+  \Delta S^{(\RN 1)} (A) &=
+  2kN
+  \Big[
+    4 \Tr A^3 \deltaA
+    + 2 \Tr (A \deltaA)^2
+    + 4 \Tr A^2 \deltaA^2
+    + 4 \Tr A \deltaA^3 + \Tr \deltaA^4
+  \Big]
+  \nonumber \\
+  &+ 8k
+  \Big[
+    \Tr(A+\deltaA) \Tr(3 A^2 \deltaA
+    + 3 A \deltaA^2
+    + \deltaA^3)
+    + \Tr \deltaA \Tr A^3
+  \Big]
+  \nonumber \\
+  &+ 6k
+  \Big[
+    2\Tr A^2 \Tr(2A \deltaA+\deltaA^2)
+    + (\Tr(2A \deltaA+\deltaA^2))^2
+  \Big]
+\end{align}
+In the case the newly generate element is on the diagonal this can
+be written as
+\begin{align}
+  \Delta S^{(\RN{1})}_{\text{diag}} (A) &= 2k \bigg\{ Na \Big[
+      4 \sum_{n,m} A_{in} A_{nm} A_{mi} + 2a c^2
+      +4 a \sum_n |A_{in}|^2 + 4 a^2 c + a^3
+  \Big]\\
+  &+4 \Big[
+    a \Tr A^3
+    + (a+\Tr A)( a^3 + 3a^2c + 3 a \sum_n |A_{in}|^2 )
+  \Big]\\
+  &+3 \, F \Big[
+   F + 2 \Tr A^2
+  \Big]
+ \bigg\} \,,
+\end{align}
+where the second line is identically zero in the case the matrix $A$
+is traceless and $F=a^2+2ac$.
+The off-diagonal case can be written as
+\begin{align}
+  &\Delta S^{(\RN{1})}_{\text{off}} (A) = 2k N \bigg\{
+      8 \Big[ a \sum_{n,m} \operatorname{Re} (A_{in} A_{nm} A_{mj}) +
+      b \sum_{n,m} \operatorname{Im} (A_{in} A_{nm} A_{mj}) \Big] \\
+      &\quad+4\Big[ (a^2-b^2)(c^2-d^2)+4abcd+(a^2+b^2)A_{ii}A_{jj} \Big]\\
+      &\quad+4 (a^2+b^2) \sum_n \left( |A_{in}|^2 + |A_{jn}|^2 \right)
+      +8 (a^2+b^2)(ac+bd) + 2(a^2+b^2)^2
+   \bigg\} \\
+   &+24k \Tr A \bigg[
+   2a \sum_n \operatorname{Re} (A_{in} A_{nj})
+   +2b \sum_n \operatorname{Im} (A_{in} A_{nj})\\
+   &\quad+ (a^2+b^2) (A_{ii}+A_{jj})
+ \bigg]\\
+ &+6k \, F \bigg[
+   F + 2 \Tr A^2
+  \bigg]
+\end{align}
+with $F=2(a^2+b^2)+4(ac+bd)$. In the same spirit we find for the
+contributions to traces with exactly two matrices $A$
+\begin{align}
+  &\Delta S^{(\RN{2})}_{\text{diag}} (A) =
+  2k \sum_{B \neq A} \bigg\{ 4N \Big[
+      2 a \operatorname{Re} \sum_{n,m} A_{in} B_{nm} B_{mi}
+      + a^2 \sum_n |B_{in}|^2
+  \Big]\\
+  &+2 \, \sigma_{AB}\,N   \Big[
+      2 a \sum_{n,m} B_{in} A_{nm} B_{mi}
+      + a^2 c_B^2
+  \Big]\\
+  &+ (8+4\sigma_{AB}) \Big[
+    a \Tr AB^2 + (a\Tr A +a^2) \sum_n |B_{in}|^2 \\
+    &\quad+ (a^2 c_B + 2a \operatorname{Re} \sum_n A_{in} B_{ni} ) \Tr B
+    + (-)^{A+B} (2 a c_B \Tr AB + a^2 c_B^2)
+  \Big] \\
+  &+ (4+2\sigma_{AB})(2ac+a^2) \Tr B^2
+ \bigg\}
+\end{align}
+where again the third line is identically zero for the case of a
+traceless matrix $A$. In the off-diagonal case we have
+\begin{align}
+  &\Delta S^{(\RN{2})}_{\text{off}} (A) =
+  2k \sum_{B \neq A} \bigg\{ 4N \Big[
+      2a \sum_{n,m} \operatorname{Re}
+      \left( A_{in} B_{nm} B_{mj} + B_{in} B_{nm} A_{mj} \right)\\
+      &\quad+ 2b \sum_{n,m} \operatorname{Im}
+      \left( A_{in} B_{nm} B_{mj} + B_{in} B_{nm} A_{mj} \right)\\
+      &\quad+ (a^2 + b^2) \sum_n \Big( |B_{in}|^2 + |B_{jn}|^2 \Big)
+  \Big]\\
+  &+ 2 \,  \sigma_{AB} \, N   \Big[
+    4a \sum_{n,m} \operatorname{Re} B_{in} A_{nm} B_{mj}
+    +4b \sum_{n,m} \operatorname{Im} B_{in} A_{nm} B_{mj} \\
+    &\quad+
+    2 \left(
+      (a^2-b^2)(c_B^2-d_B^2) + 4abc_B d_B + (a^2+b^2) B_{ii} B_{jj}
+    \right)
+  \Big]\\
+  &+ (8+4\sigma_{AB}) \Big[
+    2 \Tr A \Big(
+      a \sum_n \operatorname{Re} (B_{in} B_{nj})
+      +b \sum_n \operatorname{Im} (B_{in} B_{nj})
+          \Big) \\
+    &\quad+ \Tr B \Big(
+      (a^2+b^2)(B_{ii}+B_{jj}) + 2 \Big[
+        a \sum_n \operatorname{Re} (A_{in} B_{nj} + B_{in} A_{nj}) \\
+        &\quad\quad+b \sum_n \operatorname{Im} (A_{in} B_{nj} + B_{in} A_{nj})
+      \Big] \Big) \\
+      &\quad+ (-)^{A+B} \left(
+       4 (ac_B+bd_B) \Tr AB + 4(ac_B+bd_B)^2
+     \right) \\
+   &\quad+ \Tr B^2 \left( 2(ac+bd)+(a^2+b^2) \right)
+  \Big]
+ \bigg\}
+\end{align}
+where we defined $c_B \equiv \operatorname{Re} B_{ij}$ and
+$d_B \equiv \operatorname{Im} B_{ij}$.
+Here we also made use of the general expression
+\begin{align}
+  \Tr M \deltaA =
+  \begin{cases}
+    a \operatorname{Re} (M_{ij} + M_{ji})
+    +b \operatorname{Im} (M_{ij} - M_{ji}), &\text{off-diagonal}\\
+    a M_{ii}, &\text{diagonal}
+  \end{cases}
+\end{align}
+which is valid for any matrix $M$ that is a product of hermitian matrices.
+The trace is thus purely real.
+
+Contributions to $\Delta S^{(\RN 3)}(A)$ including exactly one matrix A
+can then easily be obtained by replacing $A$ with $\deltaA$ in the
+general expression above and using the last relation.
+In particular for $M=BCD$ the off-diagonal case will read
+\begin{align}
+  \Tr \deltaA \,BCD &=
+    a \sum_{n,m} \operatorname{Re}
+    \left( B_{in} C_{nm} D_{mj} + D_{in} C_{nm} B_{mj} \right) \\
+    &+ b \sum_{n,m} \operatorname{Im}
+    \left( B_{in} C_{nm} D_{mj} + D_{in} C_{nm} B_{mj} \right)
+\end{align}
+We then have for the diagonal part
+\begin{align}
+  &\Delta S^{(\RN{3})}_{\text{diag}} (A) =
+    8k \sum_{\mathclap{B < C < D}}
+    \;\;
+    \bigg[
+      N a c_E + a \Tr F_1 \\
+      &+ a s
+      \bigg(
+      \Tr B \; (C D)_{ii} + \Tr C \; (B D)_{ii} + \Tr D \; (B C)_{ii}
+      \bigg) \\
+      &+ a s \bigg(
+        (-)^{A+B} c_B \Tr C D +
+        (-)^{A+C} c_C \Tr B D +
+        (-)^{A+D} c_D \Tr B C
+      \bigg)
+    \bigg]
+\end{align}
+where the term proportial to $\Tr F_1$ is identically zero if $A$ is traceless.
+For the off-diagonal part instead one gets
+\begin{align}
+  &\Delta S^{(\RN{3})}_{\text{off}} (A) =
+    8k \sum_{\mathclap{B < C < D}}
+    \;\;
+    \bigg[
+      N a \operatorname{Re} (E_{ij} + E_{ji}) + N b \operatorname{Im} (E_{ij} - E_{ji}) \\
+      &+ s
+      \bigg(
+        a \operatorname{Re} (C D_{ij} + D C_{ij}) + b \operatorname{Im} (C D_{ij} + D C_{ij})
+      \bigg)  \Tr B\\
+      &+ s
+      \bigg(
+        a \operatorname{Re} (B D_{ij} + D B_{ij}) + b \operatorname{Im} (B D_{ij} + D B_{ij})
+      \bigg) \Tr C\\
+      &+ s
+      \bigg(
+        a \operatorname{Re} (B C_{ij} + C B_{ij}) + b \operatorname{Im} (B C_{ij} + C B_{ij})
+      \bigg) \Tr D \\
+      &+ 2 s
+      \bigg(
+        (-)^{A+B} (a c_B + b d_B) \Tr C D \\
+        &\quad \quad + (-)^{A+C} (a c_C + b d_C) \Tr B D \\
+        &\quad \quad + (-)^{A+D} (a c_D + b d_B) \Tr B C
+      \bigg)
+    \bigg]
+\end{align}
+where as before $c_H \equiv \operatorname{Re} H_{ij}$ and $d_H \equiv \operatorname{Im} H_{ij}$.
+
+\end{document}
