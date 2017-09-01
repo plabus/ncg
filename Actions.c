@@ -507,15 +507,9 @@ double delta_traceD4(
   int sgnB, sgnC, sgnD, sAB;
   int b1, b2, c1, c2, d1, d2, s;
 
-  double delta1;
-  double delta2;
-  double delta3;
-
-  double trA;
   double trB;
   double trC;
   double trD;
-  double trA2;
   double trB2;
   double trAB;
   double trAB2;
@@ -529,15 +523,10 @@ double delta_traceD4(
   double trF4;
   double trAE;
 
-  double a, b, c, d;
-  double abs2, mixsum;
-  double A_ii, A_jj;
   double c_B, d_B;
   double c_C, d_C;
   double c_D, d_D;
   double B_ii, B_jj;
-  double F;
-  double sum[10] = {0,0,0,0,0,0,0,0,0,0};
   double part_Ia, part_Ib, part_Ic;
   double part_IIa, part_IIb, part_IIc;
 
@@ -548,28 +537,30 @@ double delta_traceD4(
    *                                                     *
    *******************************************************/
 
+  // Initialise the accumulation variables
+  double delta1 = 0.0;
+  double delta2 = 0.0;
+  double delta3 = 0.0;
+  double sum[10] = {0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0};
+
   // FIXME:
   // HERE WAS DEFINED
   // delta A = A_new - A_old == a + b*i
   //       A = A_old
   //       A_ij = A_old_ij == c + d*i
 
-  a = creal( Matrices[ off + pos_upper ] ) - creal(old);
-  b = cimag( Matrices[ off + pos_upper ] ) - cimag(old);
-  c = creal(old);
-  d = cimag(old);
+  const double a = creal( Matrices[ off + pos_upper ] - old );
+  const double b = cimag( Matrices[ off + pos_upper ] - old );
+  const double c = creal( Matrices[ off + pos_upper ] );
+  const double d = cimag( Matrices[ off + pos_upper ] );
 
-  trA  = tr1(Matrices, num_h, num_l, n, positionA);
-  trA2 = tr2(Matrices, num_h, num_l, n, positionA, positionA);
-  A_ii = creal( Matrices[pos_x*n+pos_x+off] );
-  A_jj = creal( Matrices[pos_y*n+pos_y+off] );
+  const double trA  = tr1(Matrices, num_h, num_l, n, positionA);
+  const double trA2 = tr2(Matrices, num_h, num_l, n, positionA, positionA);
+  const double A_ii = creal( Matrices[ off + pos_x * n + pos_x ] );
+  const double A_jj = creal( Matrices[ off + pos_y * n + pos_y ] );
 
-  abs2    = a * a + b * b;
-  mixsum  = a * c + b * d;
-
-  delta1 = 0.f;
-  delta2 = 0.f;
-  delta3 = 0.f;
+  const double abs2    = a * a + b * b;
+  const double mixsum  = a * c + b * d;
 
   /*******************************************************
    *                                                     *
@@ -577,7 +568,8 @@ double delta_traceD4(
    *                                                     *
    *******************************************************/
 
-  if( pos_x != pos_y ) {
+  if( pos_x != pos_y )
+  {
 
     /*******************************/
     /**********  PART I  ***********/
@@ -591,25 +583,21 @@ double delta_traceD4(
       sum[4] = tr2_real_ij(Matrices, positionA, positionA, pos_x, pos_y);
       sum[5] = tr2_imag_ij(Matrices, positionA, positionA, pos_x, pos_y);
     } else {
-      sum[4] = 0;
-      sum[5] = 0;
+      sum[4] = 0.0;
+      sum[5] = 0.0;
     }
 
-    F = 4*mixsum + 2*abs2;
+    const double F = 4.0 * mixsum - 2.0 * abs2;
 
-    part_Ia = 8 * ( a*sum[0] + b*sum[1] ) +
-              4 * abs2 * ( sum[2] + sum[3] ) +
-              4 * ( (a*a-b*b)*(c*c-d*d) + 4*a*b*c*d + abs2*A_ii*A_jj ) +
-              8 * abs2 * mixsum +
-              2 * abs2 * abs2;
-    part_Ib = 3 * trA * ( 2*a*sum[4] + 2*b*sum[5] + abs2*(A_ii+A_jj) );
-    part_Ic = F * ( F + 2*trA2 );
+    part_Ia = 8.0 * ( a * sum[0] + b * sum[1] )
+            - 4.0 * ( ( a * a - b * b ) * ( c * c - d * d ) + 4.0 * a * b * c * d + abs2 * A_ii * A_jj )
+            - 4.0 * abs2 * ( sum[2] + sum[3] )
+            + 8.0 * abs2 * mixsum
+            - 2.0 * abs2 * abs2;
+    part_Ib = 12.0 * trA * ( 2.0 * a * sum[4] + 2.0 * b * sum[5] - abs2 * ( A_ii + A_jj ) );
+    part_Ic = 3.0 * F * ( 2.0 * trA2 - F );
 
-#ifdef LARGE_N
-    delta1 = n*part_Ia;
-#else
-    delta1 = n*part_Ia + 4*part_Ib + 3*part_Ic;
-#endif
+    delta1 = n * part_Ia + part_Ib + part_Ic;
 
     /*******************************/
     /**********  PART II  **********/
@@ -775,7 +763,8 @@ double delta_traceD4(
    *                                                     *
    *******************************************************/
 
-  else {
+  else
+  {
 
     /*******************************/
     /**********  PART I  ***********/
@@ -783,21 +772,33 @@ double delta_traceD4(
 
     sum[0] = row_norm_squared(Matrices, positionA, pos_x);
     sum[1] = tr3_real_ij(Matrices, positionA, positionA, positionA, pos_x, pos_x);
-    if(sgnA==1) sum[2] = tr3(Matrices, num_h, num_l, n, positionA, positionA, positionA);
-    else        sum[2] = 0;
+    if( sgnA == 1 )
+    {
+      sum[2] = tr3(Matrices, num_h, num_l, n, positionA, positionA, positionA);
+    }
+    else
+    {
+      sum[2] = 0.0;
+    }
 
-    F = a*a + 2*a*c;
+    const double F = 2.0 * a * c - a * a;
 
-    part_Ia = a*a*a*a + 4*a*a*a*c + 2*a*a*c*c + 4*a*a*sum[0] + 4*a*sum[1];
-    if(sgnA==1) part_Ib = a*sum[2] + ( a  + trA ) * ( a*a*a + 3*a*a*c + 3*a*sum[0] );
-    else        part_Ib = 0;
-    part_Ic = F * ( F + 2*trA2 );
+    part_Ia = 4.0 * a * sum[1]
+            - 2.0 * a * a * c * c
+            - 4.0 * a * a * sum[0]
+            + 4.0 * a * a * a * c
+            - a * a * a * a;
+    if( sgnA == 1 )
+    {
+      part_Ib = 4.0 * ( ( trA - a ) * ( 3.0 * a * sum[0] - 3.0 * a * a * c + a * a * a ) + a * sum[2] );
+    }
+    else
+    {
+      part_Ib = 0.0;
+    }
+    part_Ic = 3.0 * F * ( 2.0 * trA2 - F );
 
-#ifdef LARGE_N
-    delta1 = n*part_Ia;
-#else
-    delta1 = n*part_Ia + 4*part_Ib + 3*part_Ic;
-#endif
+    delta1 = n*part_Ia + part_Ib + part_Ic;
 
     /*******************************/
     /**********  PART II  **********/

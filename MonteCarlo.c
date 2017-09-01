@@ -206,15 +206,14 @@ void Get_Next_MCMC_Element(
     // Generate new candidate and calculate new action:
     // ------------------------------------------------
 
-    const double action_old = Calculate_Action( Matrices, parameters );
+    // const double action_old = Calculate_Action( Matrices, parameters );
     const struct Matrix_State old =
       Generate_Candidate( &rng[number_matrix], Matrices, parameters, step_size, number_matrix );
-    const double action_new = Calculate_Action( Matrices, parameters );
-    const double delta_action = action_new - action_old;
+    // const double action_new = Calculate_Action( Matrices, parameters );
 
     // const double delta_action_naive = action_new - action_old;
-    // const double delta_action = deltaS_traceD2( Matrices, num_h, num_l, length, old );
-    // if( fabs(delta_action_naive-delta_action) > 1e-08 )
+    const double delta_action = Calculate_Delta_Action( Matrices, parameters, old, sigmaAB, sigmaABCD );
+    // if( fabs(delta_action_naive-delta_action) > 1e-10 )
     // {
     //   printf("  !!!!!!!!!!!!!!!!!!!!!! deltadeltaS = %g\n", delta_action_naive-delta_action);
     // }
