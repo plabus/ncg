@@ -75,8 +75,10 @@ double traceD2(
 
 // Calculate the action Tr D^4
 double traceD4(
-    REAL complex const *Matrices,       // Array of all matrices
-    struct Matrix_Properties const prop // includes num_h, num_l, n and k
+    REAL complex const *Matrices,        // Array of all matrices
+    struct Matrix_Properties const prop, // includes num_h, num_l, n and k
+    int *sigmaAB,                        // pre-calculated Clifford products of 2 Gamma matrices
+    int **sigmaABCD                      // pre-calculated Clifford products of 4 Gamma matrices
     );
 
 // Calculate the change of the action S = Tr D^2,
@@ -102,8 +104,10 @@ double delta_traceD4(
 // Wrapper function for the full action:
 // calculates S = g2 * Tr(D^2) + g4 * Tr(D^4)
 double Calculate_Action(
-    REAL complex const *Matrices,       // array of matrices
-    struct Matrix_Properties const prop // includes num_h, num_l, n and k
+    REAL complex const *Matrices,        // array of matrices
+    struct Matrix_Properties const prop, // includes num_h, num_l, n and k
+    int *sigmaAB,                        // pre-calculated Clifford products of 2 Gamma matrices
+    int **sigmaABCD                      // pre-calculated Clifford products of 4 Gamma matrices
     );
 
 // Wrapper function for the change in the action:
@@ -111,8 +115,8 @@ double Calculate_Action(
 double Calculate_Delta_Action(
     REAL complex const *Matrices,        // array of matrices
     struct Matrix_Properties const prop, // includes num_h, num_l, n and k
-    const struct Matrix_State old_state, // struct containing information about old state
     int *sigmaAB,                        // pre-calculated Clifford products of 2 Gamma matrices
-    int **sigmaABCD                      // pre-calculated Clifford products of 4 Gamma matrices
+    int **sigmaABCD,                     // pre-calculated Clifford products of 4 Gamma matrices
+    const struct Matrix_State old        // struct containing information about old state
     );
 #endif
