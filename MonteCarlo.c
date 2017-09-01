@@ -87,16 +87,18 @@ void random_matrices(
 
 // Initialise all Matrices for the MCMC, and return the initial action
 double Matrices_Initialisation(
-    struct pcg32_random_t *rng,         // array of rng's, one for each matrix
-    REAL complex *Matrices,             // array of matrices
-    struct Matrix_Properties const prop // includes num_h, num_l, n and k
+    struct pcg32_random_t *rng,          // array of rng's, one for each matrix
+    REAL complex *Matrices,              // array of matrices
+    struct Matrix_Properties const prop, // includes num_h, num_l, n and k
+    int *sigmaAB,                        // pre-calculated Clifford products of 2 Gamma matrices
+    int **sigmaABCD                      // pre-calculated Clifford products of 4 Gamma matrices
     )
 {
   // Set high-temperature initial state for all  matrices, where random elements are in the range [-1-i, 1+i]
   random_matrices( rng, Matrices, prop, 1.0, 1.0, 1.0, 1.0 );
 
   // Calculate the initial action and return
-  return Calculate_Action( Matrices, prop );
+  return Calculate_Action( Matrices, prop, sigmaAB, sigmaABCD );
 }
 
 // Generate a new Monte Carlo candidate by changing one matrix element in one matrix
@@ -206,14 +208,15 @@ void Get_Next_MCMC_Element(
     // Generate new candidate and calculate new action:
     // ------------------------------------------------
 
-    // const double action_old = Calculate_Action( Matrices, parameters );
+    const double action_old = Calculate_Action( Matrices, parameters, sigmaAB, sigmaABCD );
     const struct Matrix_State old =
       Generate_Candidate( &rng[number_matrix], Matrices, parameters, step_size, number_matrix );
-    // const double action_new = Calculate_Action( Matrices, parameters );
+    const double action_new = Calculate_Action( Matrices, parameters, sigmaAB, sigmaABCD );
+    const double delta_action = action_new - action_old;
 
     // const double delta_action_naive = action_new - action_old;
-    const double delta_action = Calculate_Delta_Action( Matrices, parameters, old, sigmaAB, sigmaABCD );
-    // if( fabs(delta_action_naive-delta_action) > 1e-10 )
+    // const double delta_action = Calculate_Delta_Action( Matrices, parameters, sigmaAB, sigmaABCD, old );
+    // if( fabs(delta_action_naive-delta_action) > 1e-08 )
     // {
     //   printf("  !!!!!!!!!!!!!!!!!!!!!! deltadeltaS = %g\n", delta_action_naive-delta_action);
     // }

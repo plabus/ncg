@@ -97,7 +97,7 @@ int main()
     .g2 = G2,
     .g4 = G4
   };
-  double action = Matrices_Initialisation( rngs, Matrices, parameters );
+  double action = Matrices_Initialisation( rngs, Matrices, parameters, SigmaAB, SigmaABCD );
 
   if(rank==0)
   {
@@ -169,7 +169,7 @@ int main()
       tune_step_size( acc_rate_sweep, &step_size );
 
       // time, rank, sweep, action S, acceptance (accumulated), acceptance (last sweeps)
-      action = Calculate_Action( Matrices, parameters );
+      action = Calculate_Action( Matrices, parameters, SigmaAB, SigmaABCD );
       fprintf(
           stdout,
           "  %s \t %3d \t %5lu \t %.6f \t %4.2f \t %4.2f\n",

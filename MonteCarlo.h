@@ -56,9 +56,11 @@ void random_matrices(
 
 // Initialise all Matrices for the MCMC, and return the initial action
 double Matrices_Initialisation(
-    struct pcg32_random_t *rng,         // array of rng's, one for each matrix
-    REAL complex *Matrices,             // array of matrices
-    struct Matrix_Properties const prop // includes num_h, num_l, n and k
+    struct pcg32_random_t *rng,          // array of rng's, one for each matrix
+    REAL complex *Matrices,              // array of matrices
+    struct Matrix_Properties const prop, // includes num_h, num_l, n and k
+    int *sigmaAB,                        // pre-calculated Clifford products of 2 Gamma matrices
+    int **sigmaABCD                      // pre-calculated Clifford products of 4 Gamma matrices
     );
 
 // Generate a new Monte Carlo candidate by changing one matrix element in one matrix
