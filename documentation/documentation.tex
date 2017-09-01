@@ -58,15 +58,19 @@ This can be split in traces over four identical matrices, traces over
 pairs of identical matrices and traces with
 four pairwise different matrices.
 \begin{align}
-  \Tr D^4 &= k \sum_{A} \; \Tr \left( \{ \ptwid H_A, \cdot \}_{\pm}^4 \right) +
-4k \sum_{A<B} \; \sigma_{AB}
-\Tr \left( \{ \ptwid H_A, \cdot \}_{\pm}^2   \{ \ptwid H_B, \cdot \}_{\pm}^2 \right) \\
-&+ 2k \sum_{A<B} \; \sigma_{AB}
-\Tr \left( \{ \ptwid H_A, \cdot \}_{\pm}   \{ \ptwid H_B, \cdot \}_{\pm} \right)^2 \\
-&+ 4k
-\sum_{\mathclap{\substack{A<B,C,D,\\ \text{pairwise different}  }}} \;
-\sigma_{ABCD}  \Tr \left( \{ \ptwid H_A, \cdot \}_{\pm}   \{ \ptwid H_B, \cdot \}_{\pm}
-\{ \ptwid H_C, \cdot \}_{\pm}   \{ \ptwid H_D, \cdot \}_{\pm} \right)
+  &\Tr D^4 =
+  k \sum_{A} \; \Tr \left( \{ \ptwid H_A, \cdot \}_{\pm}^4 \right)
+  \nonumber \\
+  &+ 2k \sum_{A<B}
+  \Bigg[
+    2 \, \Tr \left( \{ \ptwid H_A, \cdot \}_{\pm}^2   \{ \ptwid H_B, \cdot \}_{\pm}^2 \right)
+    + \sigma_{AB} \, \Tr \left( \{ \ptwid H_A, \cdot \}_{\pm}   \{ \ptwid H_B, \cdot \}_{\pm} \right)^{\! 2}
+  \Bigg]
+  \nonumber \\
+  &+ 4k
+  \sum_{\mathclap{\substack{A<B,C,D,\\ \text{pairwise different}  }}} \;
+  \sigma_{ABCD} \, \Tr \left( \{ \ptwid H_A, \cdot \}_{\pm}   \{ \ptwid H_B, \cdot \}_{\pm}
+  \{ \ptwid H_C, \cdot \}_{\pm}   \{ \ptwid H_D, \cdot \}_{\pm} \right)
 \end{align}
 where the coefficients
 \begin{align}
@@ -91,25 +95,25 @@ P =  \{ \ptwid A, \cdot \}_{\pm}   \{ \ptwid B, \cdot \}_{\pm}
 \end{align}
 we have
 \begin{align}
-  &\Tr P = N \left[ 1+(-)^{A+B+C+D} \right] \Tr \ptwid A \ptwid B \ptwid C \ptwid D + \\
+  &\Tr P = N \left[ 1+(-)^{A+B+C+D} \right] \Tr \ptwid A \ptwid B \ptwid C \ptwid D + \nonumber \\
   &+ \left[ (-)^A + (-)^{B+C+D} \right] \Tr \ptwid A \Tr \ptwid B \ptwid C \ptwid D +
-  \left[ (-)^B + (-)^{A+C+D} \right] \Tr \ptwid B \Tr \ptwid A \ptwid C \ptwid D + \\
+  \left[ (-)^B + (-)^{A+C+D} \right] \Tr \ptwid B \Tr \ptwid A \ptwid C \ptwid D + \nonumber \\
   &+ \left[ (-)^C + (-)^{A+B+D} \right] \Tr \ptwid C \Tr \ptwid A \ptwid B \ptwid D +
-  \left[ (-)^D + (-)^{A+B+C} \right] \Tr \ptwid D \Tr \ptwid A \ptwid B \ptwid C + \\
+  \left[ (-)^D + (-)^{A+B+C} \right] \Tr \ptwid D \Tr \ptwid A \ptwid B \ptwid C + \nonumber \\
   &+ \left[ (-)^{A+B} + (-)^{C+D} \right] \Tr \ptwid A \ptwid B \Tr \ptwid C \ptwid D +
-  \left[ (-)^{A+C} + (-)^{B+D} \right] \Tr \ptwid A \ptwid C \Tr \ptwid B \ptwid D + \\
+  \left[ (-)^{A+C} + (-)^{B+D} \right] \Tr \ptwid A \ptwid C \Tr \ptwid B \ptwid D + \nonumber \\
   &+ \left[ (-)^{A+D} + (-)^{B+C} \right] \Tr \ptwid A \ptwid D \Tr \ptwid B \ptwid C
 \end{align}
 In particular $\Tr P = 0$ for $(-)^{A+B+C+D}=-1$. Making use of the tracelessness of the ``twiddled'' matrices we can further simplify
 \begin{align}
   \Tr P = 2 \, \bigg[ N \Tr \ptwid A \ptwid B \ptwid C \ptwid D +
-\Tr A \Tr \ptwid B \ptwid C \ptwid D +
-\Tr B \Tr \ptwid A \ptwid C \ptwid D + \\
-+ \Tr C \Tr \ptwid A \ptwid B \ptwid D +
-\Tr D \Tr \ptwid A \ptwid B \ptwid C +
-(-)^{A+B} \Tr \ptwid A \ptwid B \Tr \ptwid C \ptwid D + \\
-+ (-)^{A+C} \Tr \ptwid A \ptwid C \Tr \ptwid B \ptwid D +
-(-)^{A+D} \Tr \ptwid A \ptwid D \Tr \ptwid B \ptwid C \bigg]
+    \Tr A \Tr \ptwid B \ptwid C \ptwid D +
+    \Tr B \Tr \ptwid A \ptwid C \ptwid D + \nonumber \\
+    + \Tr C \Tr \ptwid A \ptwid B \ptwid D +
+    \Tr D \Tr \ptwid A \ptwid B \ptwid C +
+    (-)^{A+B} \Tr \ptwid A \ptwid B \Tr \ptwid C \ptwid D + \nonumber \\
+    + (-)^{A+C} \Tr \ptwid A \ptwid C \Tr \ptwid B \ptwid D +
+  (-)^{A+D} \Tr \ptwid A \ptwid D \Tr \ptwid B \ptwid C \bigg]
 \end{align}
 and non-vanishing terms with traces of four different matrices will
 always have $\sigma_{ABCD} = \pm 1$.
@@ -118,24 +122,48 @@ Let us now denote the part of the action composed out of terms with traces
 involving at \textit{least} one fixed matrix (say $A$) with $S(A)$.
 Then combining the previous results one gets
 \begin{align}
-  \frac{S(A)}{2k} &= N \Tr A^4 + 4 \Tr A \Tr A^3 + 3 (Tr A^2)^2 + \\
-  &+ \sum_{B \neq A} \bigg[ 4N\Tr A^2 \ptwid H_B^2
-    + 2 \sigma_{AB}N \Tr A \ptwid H_B A \ptwid H_B \\
-    &\quad+ (8+4\sigma_{AB}) \Tr A \Tr A \ptwid H_B^2
-    + (8+4\sigma_{AB}) \Tr H_B \Tr A^2 H_B \\
-    &\quad+ (4+2\sigma_{AB}) \Tr A^2 \Tr \ptwid H_B^2
-  + (-)^{A+H_B} (8+4\sigma_{AB}) (\Tr A \ptwid H_B)^2 \bigg] + \\
-  &+ 4 \sum_{\mathclap{\substack{B < C < D\\A \not \in \{B,C,D\} }}}
+  &S[A] =
+  2 \, k \,
+  \bigg[
+      N \, \Tr \big( A^4 \big)
+    + 4 \, \Tr \big( A \big) \Tr \big( A^3 \big)
+    + 3 \Big( \Tr \big( A^2 \big) \Big)^{\! 2}
+  \bigg]
+  \nonumber \\
+  &+ 4 \, k \,
+  \sum_{B \neq A}
+  \bigg[
+    N
+    \Big(
+      2 \, \Tr \big( A^2 B^2 \big)
+      + \sigma_{AB} \, \Tr \big( A B \big)^2
+    \Big)
+    % \nonumber \\
+    % &\quad+
+    + \big( 2 + \sigma_{AB} \big)
+    \Big(
+      2 \, \Tr \big( A \big) \Tr \big( A B^2 \big)
+      \nonumber \\
+      &\qquad+ 2 \,  \Tr \big( B \big) \Tr \big( A^2 B \big)
+      + (-)^{A+B} \, 2 \, \Big( \Tr \big( A B \big) \Big)^{\! 2}
+      + \Tr \big( A^2 \big) \Tr \big( B^2 \big)
+    \Big)
+  \bigg]
+  \nonumber \\
+  &+ 8 \, k \,
+  \sum_{\mathclap{\substack{B < C < D\\A \not \in \{B,C,D\} }}}
   \;\;
   \bigg[
     N \Tr A E +
     \Tr A \Tr F_1 +
     \Tr H_B \Tr F_2 +
-    \Tr H_C \Tr F_3 \\
+    \Tr H_C \Tr F_3
+    \nonumber \\
     &\quad+
     \Tr H_D \Tr F_4 +
     s \bigg(
-      (-)^{A+H_B} \Tr A \ptwid H_B \Tr \ptwid H_C \ptwid H_D \\
+      (-)^{A+H_B} \Tr A \ptwid H_B \Tr \ptwid H_C \ptwid H_D
+      \nonumber \\
       &\quad+     (-)^{A+H_C} \Tr A \ptwid H_C \Tr \ptwid H_B \ptwid H_D +
       (-)^{A+H_D} \Tr A \ptwid H_D \Tr \ptwid H_B \ptwid H_C
     \bigg)
@@ -293,8 +321,7 @@ The off-diagonal case can be written as
     \Big( 4 ( ac + bd ) - 2 ( a^2 + b^2 ) \Big)
   \bigg] \,.
 \end{align}
-In the same spirit we find for the
-contributions to traces with exactly two matrices $A$
+In the same spirit we find for the contributions to traces with exactly two matrices $A$
 \begin{align}
   &\Delta S^{(\RN{2})}_{\mathrm{diag}} (A) =
   2k \sum_{B \neq A} \bigg\{ 4N \Big[
