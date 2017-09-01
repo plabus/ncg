@@ -502,6 +502,7 @@ double delta_traceD4(
   int const sgnA = positionA < num_h ? 1 : -1;
   size_t const num_trABCD = sigmaABCD[positionA][0];
 
+  // FIXME: Declare variables where they are set/used!
   int offB, offC, offD;
   int sgnB, sgnC, sgnD, sAB;
   int b1, b2, c1, c2, d1, d2, s;
@@ -558,10 +559,10 @@ double delta_traceD4(
   c = creal(old);
   d = cimag(old);
 
-  trA  = tr1(Matrices, num_h, num_l, N, positionA);
-  trA2 = tr2(Matrices, num_h, num_l, N, positionA, positionA);
-  A_ii = creal( Matrices[pos_x*N+pos_x+off] );
-  A_jj = creal( Matrices[pos_y*N+pos_y+off] );
+  trA  = tr1(Matrices, num_h, num_l, n, positionA);
+  trA2 = tr2(Matrices, num_h, num_l, n, positionA, positionA);
+  A_ii = creal( Matrices[pos_x*n+pos_x+off] );
+  A_jj = creal( Matrices[pos_y*n+pos_y+off] );
 
   abs2    = a * a + b * b;
   mixsum  = a * c + b * d;
@@ -605,9 +606,9 @@ double delta_traceD4(
     part_Ic = F * ( F + 2*trA2 );
 
 #ifdef LARGE_N
-    delta1 = N*part_Ia;
+    delta1 = n*part_Ia;
 #else
-    delta1 = N*part_Ia + 4*part_Ib + 3*part_Ic;
+    delta1 = n*part_Ia + 4*part_Ib + 3*part_Ic;
 #endif
 
     /*******************************/
@@ -622,14 +623,14 @@ double delta_traceD4(
       sgnB = positionB < num_h ? 1 : -1;
       offB = positionB * n * n;
 
-      trB  = tr1(Matrices, num_h, num_l, N, positionB);
-      trB2 = tr2(Matrices, num_h, num_l, N, positionB, positionB);
-      trAB = tr2(Matrices, num_h, num_l, N, positionA, positionB);
+      trB  = tr1(Matrices, num_h, num_l, n, positionB);
+      trB2 = tr2(Matrices, num_h, num_l, n, positionB, positionB);
+      trAB = tr2(Matrices, num_h, num_l, n, positionA, positionB);
 
       c_B  = creal( Matrices[pos_upper+offB] );
       d_B  = cimag( Matrices[pos_upper+offB] );
-      B_ii = creal( Matrices[pos_x*N+pos_x+offB] );
-      B_jj = creal( Matrices[pos_y*N+pos_y+offB] );
+      B_ii = creal( Matrices[pos_x*n+pos_x+offB] );
+      B_jj = creal( Matrices[pos_y*n+pos_y+offB] );
 
       sum[0] = tr3_real_ij(Matrices, positionA, positionB, positionB, pos_x, pos_y);
       sum[0]+= tr3_real_ij(Matrices, positionB, positionB, positionA, pos_x, pos_y);
@@ -666,9 +667,9 @@ double delta_traceD4(
                  trB2 * ( 2 * mixsum + abs2 );
 
 #ifdef LARGE_N
-      delta2 += 4*N*part_IIa + 2*sAB*N*part_IIb;
+      delta2 += 4*n*part_IIa + 2*sAB*n*part_IIb;
 #else
-      delta2 += 4*N*part_IIa + 2*sAB*N*part_IIb + (8+4*sAB)*part_IIc;
+      delta2 += 4*n*part_IIa + 2*sAB*n*part_IIb + (8+4*sAB)*part_IIc;
 #endif
     } /* END LOOP OVER MATRICES B */
 
@@ -707,14 +708,14 @@ double delta_traceD4(
       d_D = cimag( Matrices[pos_upper+offD] );
 
       /* Traces over one matrix: */
-      trB = tr1(Matrices, num_h, num_l, N, positionB);
-      trC = tr1(Matrices, num_h, num_l, N, positionC);
-      trD = tr1(Matrices, num_h, num_l, N, positionD);
+      trB = tr1(Matrices, num_h, num_l, n, positionB);
+      trC = tr1(Matrices, num_h, num_l, n, positionC);
+      trD = tr1(Matrices, num_h, num_l, n, positionD);
 
       /* Traces over two matrices: */
-      trABtrCD = (a * c_B + b * d_B) * tr2(Matrices, num_h, num_l, N, positionC, positionD);
-      trACtrBD = (a * c_C + b * d_C) * tr2(Matrices, num_h, num_l, N, positionB, positionD);
-      trADtrBC = (a * c_D + b * d_D) * tr2(Matrices, num_h, num_l, N, positionB, positionC);
+      trABtrCD = (a * c_B + b * d_B) * tr2(Matrices, num_h, num_l, n, positionC, positionD);
+      trACtrBD = (a * c_C + b * d_C) * tr2(Matrices, num_h, num_l, n, positionB, positionD);
+      trADtrBC = (a * c_D + b * d_D) * tr2(Matrices, num_h, num_l, n, positionB, positionC);
 
       /* Traces over one and three matrices: */
       if(sgnB==1) {
@@ -760,9 +761,9 @@ double delta_traceD4(
       trAE+= (c1+d1)*b*tr3_imag_ij(Matrices, positionD, positionB, positionC, pos_x, pos_y);
 
 #ifdef LARGE_N
-      delta3 +=   N*trAE;
+      delta3 +=   n*trAE;
 #else
-      delta3 += ( N*trAE + s*(trB*trF2 + trC*trF3 + trD*trF4) +
+      delta3 += ( n*trAE + s*(trB*trF2 + trC*trF3 + trD*trF4) +
                   2*s*(sgnA*sgnB*trABtrCD + sgnA*sgnC*trACtrBD + sgnA*sgnD*trADtrBC) );
 #endif
     } /* END LOOP OVER MATRICES */
@@ -782,7 +783,7 @@ double delta_traceD4(
 
     sum[0] = row_norm_squared(Matrices, positionA, pos_x);
     sum[1] = tr3_real_ij(Matrices, positionA, positionA, positionA, pos_x, pos_x);
-    if(sgnA==1) sum[2] = tr3(Matrices, num_h, num_l, N, positionA, positionA, positionA);
+    if(sgnA==1) sum[2] = tr3(Matrices, num_h, num_l, n, positionA, positionA, positionA);
     else        sum[2] = 0;
 
     F = a*a + 2*a*c;
@@ -793,9 +794,9 @@ double delta_traceD4(
     part_Ic = F * ( F + 2*trA2 );
 
 #ifdef LARGE_N
-    delta1 = N*part_Ia;
+    delta1 = n*part_Ia;
 #else
-    delta1 = N*part_Ia + 4*part_Ib + 3*part_Ic;
+    delta1 = n*part_Ia + 4*part_Ib + 3*part_Ic;
 #endif
 
     /*******************************/
@@ -811,10 +812,10 @@ double delta_traceD4(
       sgnB = positionB < num_h ? 1 : -1;
       offB = positionB * n * n;
 
-      trB  = tr1(Matrices, num_h, num_l, N, positionB);
-      trB2 = tr2(Matrices, num_h, num_l, N, positionB, positionB);
-      trAB = tr2(Matrices, num_h, num_l, N, positionA, positionB);
-      if(sgnA==1) trAB2 = tr3(Matrices, num_h, num_l, N, positionA, positionB, positionB);
+      trB  = tr1(Matrices, num_h, num_l, n, positionB);
+      trB2 = tr2(Matrices, num_h, num_l, n, positionB, positionB);
+      trAB = tr2(Matrices, num_h, num_l, n, positionA, positionB);
+      if(sgnA==1) trAB2 = tr3(Matrices, num_h, num_l, n, positionA, positionB, positionB);
       else        trAB2 = 0;
 
       c_B = creal( Matrices[pos_upper+offB] );
@@ -838,9 +839,9 @@ double delta_traceD4(
       }
 
 #ifdef LARGE_N
-      delta2 += 4*N*part_IIa + 2*sAB*N*part_IIb;
+      delta2 += 4*n*part_IIa + 2*sAB*n*part_IIb;
 #else
-      delta2 += 4*N*part_IIa + 2*sAB*N*part_IIb + (4+2*sAB)*part_IIc;
+      delta2 += 4*n*part_IIa + 2*sAB*n*part_IIb + (4+2*sAB)*part_IIc;
 #endif
     } /* END LOOP OVER MATRICES B */
 
@@ -876,19 +877,19 @@ double delta_traceD4(
       c_D = creal( Matrices[pos_upper+offD] );
 
       /* Traces over one matrix: */
-      trB = tr1(Matrices, num_h, num_l, N, positionB);
-      trC = tr1(Matrices, num_h, num_l, N, positionC);
-      trD = tr1(Matrices, num_h, num_l, N, positionD);
+      trB = tr1(Matrices, num_h, num_l, n, positionB);
+      trC = tr1(Matrices, num_h, num_l, n, positionC);
+      trD = tr1(Matrices, num_h, num_l, n, positionD);
 
       /* Traces over two matrices: */
-      trABtrCD = c_B * tr2(Matrices, num_h, num_l, N, positionC, positionD);
-      trACtrBD = c_C * tr2(Matrices, num_h, num_l, N, positionB, positionD);
-      trADtrBC = c_D * tr2(Matrices, num_h, num_l, N, positionB, positionC);
+      trABtrCD = c_B * tr2(Matrices, num_h, num_l, n, positionC, positionD);
+      trACtrBD = c_C * tr2(Matrices, num_h, num_l, n, positionB, positionD);
+      trADtrBC = c_D * tr2(Matrices, num_h, num_l, n, positionB, positionC);
 
       /* Traces over one and three matrices: */
       if(sgnA==1) {
-        trF1 = (b1+c2+d1)*tr3(Matrices, num_h, num_l, N, positionB, positionC, positionD);
-        trF1+= (b2+c1+d2)*tr3(Matrices, num_h, num_l, N, positionC, positionB, positionD);
+        trF1 = (b1+c2+d1)*tr3(Matrices, num_h, num_l, n, positionB, positionC, positionD);
+        trF1+= (b2+c1+d2)*tr3(Matrices, num_h, num_l, n, positionC, positionB, positionD);
       } else {
         trF1 = 0;
       }
@@ -917,9 +918,9 @@ double delta_traceD4(
       trAE+= (c1+d1)*tr3_real_ij(Matrices, positionC, positionB, positionD, pos_x, pos_x);
 
 #ifdef LARGE_N
-      delta3 += a * N * trAE;
+      delta3 += a * n * trAE;
 #else
-      delta3 += a * ( N*trAE + trF1 + s*(trB*trF2 + trC*trF3 + trD*trF4) +
+      delta3 += a * ( n*trAE + trF1 + s*(trB*trF2 + trC*trF3 + trD*trF4) +
                       s*(sgnA*sgnB*trABtrCD + sgnA*sgnC*trACtrBD + sgnA*sgnD*trADtrBC) );
 #endif
     } /* END LOOP OVER MATRICES */
