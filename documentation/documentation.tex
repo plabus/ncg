@@ -10,6 +10,9 @@
 \usepackage{mathrsfs}
 \usepackage{empheq}
 
+\usepackage{libertine}
+\usepackage{microtype}
+
 \usepackage{graphicx}
 \usepackage[font=footnotesize,labelfont=bf]{caption}
 \usepackage{subcaption}
@@ -19,8 +22,9 @@
 \newcommand{\RN}[1]{%
     \textup{\uppercase\expandafter{\romannumeral#1}}%
 }
-\DeclareMathOperator{\Tr}{Tr}
+% \DeclareMathOperator{\Tr}{Tr}
 
+\newcommand{\Tr}{\mathrm{Tr}\vspace{-2pt}}
 \newcommand{\deltaA}{\delta \! A}
 
 \author{Peter Labus}
@@ -180,91 +184,119 @@ and 315 in $d=7$.
 \newpage
 
 If we choose to generate a new Markov chain element by changing one
-matrix element at some random position $(i,j)$ the above formul\ae~
-simplify considerably.
+matrix element at some random position $(i,j)$ the above formulas simplify considerably.
 Let us denote the new matrix by
 \begin{align}
-  A^{\text{new}} = A^{\text{old}} + \deltaA
+  A^{\mathrm{new}} = A^{\mathrm{old}} + \deltaA
 \end{align}
 where $\deltaA$ is zero everywhere except at positions $(i,j)$ and
-$(j,i)$ and in the following we will write
+$(j,i)$, and we adapt the convention $i<j$.
+We will use the following notation throughout
 \begin{align}
-  \deltaA_{ij} = A_{ij}^{\text{new}} - A_{ij}^{\text{old}}
-  \equiv a + bi, \;\; i<j
+  \deltaA_{ij} = A_{ij}^{\mathrm{new}} - A_{ij}^{\mathrm{old}} \equiv a + bi \,,
+  \quad \text{and} \quad
+  A^{\mathrm{new}}_{ij} \equiv A_{ij} \equiv c + di \,.
 \end{align}
-as well as
-\begin{align}
-  A^{\text{old}} \equiv A, \; A_{ij}
-  \equiv c + di
-\end{align}
-Then we can write the difference of the action $\Delta S = S^{\text{new}}
-- S^{\text{old}}$ for some given matrix $A$ in terms of traces of
+Then we can write the difference of the action $\Delta S = S^{\mathrm{new}}
+- S^{\mathrm{old}}$ for some given matrix $A$ in terms of traces of
 all matrices and $\deltaA$.
 The first part (involving four matrices $A$) then reads
 \begin{align}
   \Delta S^{(\RN 1)} (A) &=
-  2kN
+  2 \, k \, N
   \Big[
-    4 \Tr A^3 \deltaA
-    + 2 \Tr (A \deltaA)^2
-    + 4 \Tr A^2 \deltaA^2
-    + 4 \Tr A \deltaA^3 + \Tr \deltaA^4
+      4 \Tr \big( A^3 \deltaA   \big)
+    - 2 \Tr \big( A   \deltaA   \big)^2
+    - 4 \Tr \big( A^2 \deltaA^2 \big)
+    + 4 \Tr \big( A   \deltaA^3 \big)
+    -   \Tr \big(     \deltaA^4 \big)
   \Big]
   \nonumber \\
-  &+ 8k
+  &+ 8 \, k
   \Big[
-    \Tr(A+\deltaA) \Tr(3 A^2 \deltaA
-    + 3 A \deltaA^2
-    + \deltaA^3)
-    + \Tr \deltaA \Tr A^3
+    \Tr \big( A - \deltaA \big) \Tr \big( 3 A^2 \deltaA - 3 A \deltaA^2 + \deltaA^3 \big)
+    + \Tr \big( \deltaA \big) \Tr \big( A^3 \big)
   \Big]
   \nonumber \\
-  &+ 6k
+  &+ 6  \, k  \, \Tr \big( 2 A \deltaA - \deltaA^2 \big)
   \Big[
-    2\Tr A^2 \Tr(2A \deltaA+\deltaA^2)
-    + (\Tr(2A \deltaA+\deltaA^2))^2
+    2 \Tr \big( A^2 \big)
+    - \Tr \big( 2 A \deltaA - \deltaA^2 \big)
   \Big]
 \end{align}
-In the case the newly generate element is on the diagonal this can
-be written as
+In the case the newly generate element is on the diagonal this can be written as
 \begin{align}
-  \Delta S^{(\RN{1})}_{\text{diag}} (A) &= 2k \bigg\{ Na \Big[
-      4 \sum_{n,m} A_{in} A_{nm} A_{mi} + 2a c^2
-      +4 a \sum_n |A_{in}|^2 + 4 a^2 c + a^3
-  \Big]\\
-  &+4 \Big[
-    a \Tr A^3
-    + (a+\Tr A)( a^3 + 3a^2c + 3 a \sum_n |A_{in}|^2 )
-  \Big]\\
-  &+3 \, F \Big[
-   F + 2 \Tr A^2
+  \Delta S^{(\RN{1})}_{\mathrm{diag}} (A) &=
+    2 \, k \, N
+    \Big[
+      4 a \sum_{n,m} A_{in} A_{nm} A_{mi}
+      - 2 a^2 c^2
+      - 4 a^2 \sum_n |A_{in}|^2
+      + 4 a^3 c
+      - a^4
   \Big]
- \bigg\} \,,
+  \nonumber \\
+  &+8 \, k
+  \Big[
+    \Big( \Tr \big( A \big) - a \Big)
+    \Big(
+      3 a \sum_n |A_{in}|^2
+      - 3 a^2 c
+      + a^3
+    \Big)
+    + a \, \Tr \big( A^3 \big)
+  \Big]
+  \nonumber \\
+  &+6 \, k \, \big( 2 a c - a^2 \big)
+  \Big[
+    2 \Tr \big( A^2 \big)
+    - \big( 2 a c - a^2 \big)
+  \Big]
+ \,,
 \end{align}
-where the second line is identically zero in the case the matrix $A$
-is traceless and $F=a^2+2ac$.
+where
+\textit{the second line is identically zero in the case the matrix $A$ is traceless}.
 The off-diagonal case can be written as
 \begin{align}
-  &\Delta S^{(\RN{1})}_{\text{off}} (A) = 2k N \bigg\{
-      8 \Big[ a \sum_{n,m} \operatorname{Re} (A_{in} A_{nm} A_{mj}) +
-      b \sum_{n,m} \operatorname{Im} (A_{in} A_{nm} A_{mj}) \Big] \\
-      &\quad+4\Big[ (a^2-b^2)(c^2-d^2)+4abcd+(a^2+b^2)A_{ii}A_{jj} \Big]\\
-      &\quad+4 (a^2+b^2) \sum_n \left( |A_{in}|^2 + |A_{jn}|^2 \right)
-      +8 (a^2+b^2)(ac+bd) + 2(a^2+b^2)^2
-   \bigg\} \\
-   &+24k \Tr A \bigg[
-   2a \sum_n \operatorname{Re} (A_{in} A_{nj})
-   +2b \sum_n \operatorname{Im} (A_{in} A_{nj})\\
-   &\quad+ (a^2+b^2) (A_{ii}+A_{jj})
- \bigg]\\
- &+6k \, F \bigg[
-   F + 2 \Tr A^2
+  &\Delta S^{(\RN{1})}_{\mathrm{off}} (A) = 2 \, k  \, N
+  \bigg\{
+    8
+    \Big[
+      a \sum_{n,m} \operatorname{Re} (A_{in} A_{nm} A_{mj}) +
+      b \sum_{n,m} \operatorname{Im} (A_{in} A_{nm} A_{mj})
+    \Big]
+    \nonumber \\
+    &\quad-4
+    \Big[
+      (a^2-b^2)(c^2-d^2)
+      + 4 a b c d
+      + ( a^2 + b^2 ) A_{ii} A_{jj}
+    \Big]
+    \nonumber \\
+    &\quad-4 (a^2+b^2) \sum_n \left( |A_{in}|^2 + |A_{jn}|^2 \right)
+    + 8 (a^2+b^2)(ac+bd)
+    - 2 (a^2+b^2)^2
+  \bigg\}
+  \nonumber \\
+  &+24 \, k  \, \Tr \big( A \big)
+  \bigg[
+    2 a \sum_n \operatorname{Re} (A_{in} A_{nj})
+    + 2 b \sum_n \operatorname{Im} (A_{in} A_{nj})
+    - (a^2+b^2) (A_{ii}+A_{jj})
   \bigg]
+  \nonumber \\
+  &+6 \, k \,
+  \Big( 4 ( ac + bd ) - 2 ( a^2 + b^2 ) \Big)
+  \bigg[
+    2 \Tr \big( A^2 \big)
+    -
+    \Big( 4 ( ac + bd ) - 2 ( a^2 + b^2 ) \Big)
+  \bigg] \,.
 \end{align}
-with $F=2(a^2+b^2)+4(ac+bd)$. In the same spirit we find for the
+In the same spirit we find for the
 contributions to traces with exactly two matrices $A$
 \begin{align}
-  &\Delta S^{(\RN{2})}_{\text{diag}} (A) =
+  &\Delta S^{(\RN{2})}_{\mathrm{diag}} (A) =
   2k \sum_{B \neq A} \bigg\{ 4N \Big[
       2 a \operatorname{Re} \sum_{n,m} A_{in} B_{nm} B_{mi}
       + a^2 \sum_n |B_{in}|^2
@@ -284,7 +316,7 @@ contributions to traces with exactly two matrices $A$
 where again the third line is identically zero for the case of a
 traceless matrix $A$. In the off-diagonal case we have
 \begin{align}
-  &\Delta S^{(\RN{2})}_{\text{off}} (A) =
+  &\Delta S^{(\RN{2})}_{\mathrm{off}} (A) =
   2k \sum_{B \neq A} \bigg\{ 4N \Big[
       2a \sum_{n,m} \operatorname{Re}
       \left( A_{in} B_{nm} B_{mj} + B_{in} B_{nm} A_{mj} \right)\\
@@ -344,7 +376,7 @@ In particular for $M=BCD$ the off-diagonal case will read
 \end{align}
 We then have for the diagonal part
 \begin{align}
-  &\Delta S^{(\RN{3})}_{\text{diag}} (A) =
+  &\Delta S^{(\RN{3})}_{\mathrm{diag}} (A) =
     8k \sum_{\mathclap{B < C < D}}
     \;\;
     \bigg[
@@ -363,7 +395,7 @@ We then have for the diagonal part
 where the term proportial to $\Tr F_1$ is identically zero if $A$ is traceless.
 For the off-diagonal part instead one gets
 \begin{align}
-  &\Delta S^{(\RN{3})}_{\text{off}} (A) =
+  &\Delta S^{(\RN{3})}_{\mathrm{off}} (A) =
     8k \sum_{\mathclap{B < C < D}}
     \;\;
     \bigg[
