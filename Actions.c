@@ -447,7 +447,7 @@ double traceD4(
 {
   // TODO: Add formular for action
   //-----------------------------------------------------------------------------//
-  // Calculating the action:                                                     //
+  // Calculating the action: (cf. documentation.pdf)                             //
   //                                                                             //
   // S = Tr D^4                                                                  //
   //   = 2 k \sum_A [ N Tr(A^4) + 4 Tr(A) Tr(A^3) + 3 (Tr(A^2))^2 ]  ---> part I //
@@ -588,7 +588,6 @@ double delta_traceD4(
   const size_t k     = prop.k;
   const size_t positionA = old_state.matrix; // number of the matrix that has changed
   const size_t pos_upper = old_state.pos_upper; // index in uppper triangle where element was changed
-  // FIXME: Did this come in a specific order????
   const size_t pos_x = old_state.pos_x;
   const size_t pos_y = old_state.pos_y;
   const REAL complex old = old_state.matrix_element; // the old matrix element at that position
@@ -597,13 +596,13 @@ double delta_traceD4(
   const int sgnA = positionA < num_h ? 1 : -1;
   const size_t num_trABCD = sigmaABCD[positionA][0];
 
-  // FIXME:
-  // HERE WAS DEFINED
-  // delta A = A_new - A_old == a + b*i
-  //       A = A_old
-  //       A_ij = A_old_ij == c + d*i
   // TODO:
   // Add the relevant part of the documentation as comment
+
+  // Here we define (cf. documentation):
+  //
+  //   \delta A = A_new - A_old == a + b*i
+  //   A_ij == A_new_ij == c + d*i
 
   // Precalculate some variables
   const double a = creal( Matrices[ off + pos_upper ] - old );
