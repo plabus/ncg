@@ -445,6 +445,7 @@ double traceD4(
     int **sigmaABCD                      // pre-calculated Clifford products of 4 Gamma matrices
     )
 {
+  // TODO: Add formular for action
   //-----------------------------------------------------------------------------//
   // Calculating the action:                                                     //
   //                                                                             //
@@ -476,6 +477,10 @@ double traceD4(
   {
     for( size_t posA = 0; posA < posB; ++posA )
     {
+      int const sgnA = posA < num_h ? 1 : -1;
+      int const sgnB = posB < num_h ? 1 : -1;
+      int const sAB = sigmaAB[ posA * num_m + posB ];
+
       double const TrA    = tr1( Matrices, num_h, num_l, n, posA );
       double const TrB    = tr1( Matrices, num_h, num_l, n, posB );
       double const TrAA   = tr2( Matrices, num_h, num_l, n, posA, posA );
@@ -486,17 +491,75 @@ double traceD4(
       double const TrAABB = tr4( Matrices, num_h, num_l, n, posA, posA, posB, posB );
       double const TrABAB = tr4( Matrices, num_h, num_l, n, posA, posB, posA, posB );
 
-      int const sgnA = posA < num_h ? 1 : -1;
-      int const sgnB = posB < num_h ? 1 : -1;
-      int const sAB = sigmaAB[ posA * num_m + posB ];
-
       partII += n * ( 2.0 * TrAABB + sAB * TrABAB )
               + ( 2.0 + sAB )
               * ( 2.0 * TrA * TrABB + 2.0 * TrB * TrAAB + 2.0 * sgnA * sgnB * TrAB * TrAB + TrAA * TrBB );
     }
   }
 
-  double const action = 2.0 * k * ( partI + 2.0 * partII );
+  double partIII = 0.0;
+  for( size_t posA = 0; posA < num_m; ++posA )
+  {
+    // Get the number of terms for which
+    // Tr( \Gamma_A \Gamma_B \Gamma_C \Gamma_D ) != 0
+    // for this specific matrix A
+    size_t const num_trABCD = sigmaABCD[posA][0];
+
+    for( size_t element = 0; element < num_trABCD; ++element )
+    {
+      size_t const posB = sigmaABCD[posA][9*element+1];
+      size_t const posC = sigmaABCD[posA][9*element+2];
+      size_t const posD = sigmaABCD[posA][9*element+3];
+
+      if( posB > posA || posC > posA || posD > posA ) continue;
+
+      int const sgnA = posA < num_h ? 1 : -1;
+      int const sgnB = posB < num_h ? 1 : -1;
+      int const sgnC = posC < num_h ? 1 : -1;
+      int const sgnD = posD < num_h ? 1 : -1;
+
+      int const b1 = sigmaABCD[posA][9*element+4];
+      int const b2 = sigmaABCD[posA][9*element+5];
+      int const c1 = sigmaABCD[posA][9*element+6];
+      int const c2 = sigmaABCD[posA][9*element+7];
+      int const d1 = sigmaABCD[posA][9*element+8];
+      int const d2 = sigmaABCD[posA][9*element+9];
+      int const s = b1 + b2 + c1 + c2 + d1 + d2;
+
+      double const TrA    = tr1( Matrices, num_h, num_l, n, posA );
+      double const TrB    = tr1( Matrices, num_h, num_l, n, posB );
+      double const TrC    = tr1( Matrices, num_h, num_l, n, posC );
+      double const TrD    = tr1( Matrices, num_h, num_l, n, posD );
+      double const TrAB   = tr2( Matrices, num_h, num_l, n, posA, posB );
+      double const TrAC   = tr2( Matrices, num_h, num_l, n, posA, posC );
+      double const TrAD   = tr2( Matrices, num_h, num_l, n, posA, posD );
+      double const TrBC   = tr2( Matrices, num_h, num_l, n, posB, posC );
+      double const TrBD   = tr2( Matrices, num_h, num_l, n, posB, posD );
+      double const TrCD   = tr2( Matrices, num_h, num_l, n, posC, posD );
+
+      double const TrABC  = tr3( Matrices, num_h, num_l, n, posA, posB, posC );
+      double const TrACB  = tr3( Matrices, num_h, num_l, n, posA, posC, posB );
+      double const TrABD  = tr3( Matrices, num_h, num_l, n, posA, posB, posD );
+      double const TrADB  = tr3( Matrices, num_h, num_l, n, posA, posD, posB );
+      double const TrACD  = tr3( Matrices, num_h, num_l, n, posA, posC, posD );
+      double const TrADC  = tr3( Matrices, num_h, num_l, n, posA, posD, posC );
+      double const TrBCD  = tr3( Matrices, num_h, num_l, n, posB, posC, posD );
+      double const TrBDC  = tr3( Matrices, num_h, num_l, n, posB, posD, posC );
+
+      double const TrABCD = tr4( Matrices, num_h, num_l, n, posA, posB, posC, posD );
+      double const TrABDC = tr4( Matrices, num_h, num_l, n, posA, posB, posD, posC );
+      double const TrACBD = tr4( Matrices, num_h, num_l, n, posA, posC, posB, posD );
+
+      partIII += n * ( ( b1 + d2 ) * TrABCD + ( b2 + c2 ) * TrABDC + ( c1 + d1 ) * TrACBD )
+               + TrA * ( ( b1 + c2 + d1 ) * TrBCD + ( b2 + c1 + d2 ) * TrBDC )
+               + TrB * ( ( b1 + c1 + c2 ) * TrACD + ( b2 + d1 + d2 ) * TrADC )
+               + TrC * ( ( b1 + b2 + c1 ) * TrABD + ( c2 + d1 + d2 ) * TrADB )
+               + TrD * ( ( b1 + b2 + d1 ) * TrABC + ( c1 + c2 + d2 ) * TrACB )
+               + s * ( sgnA * sgnB * TrAB * TrCD + sgnA * sgnC * TrAC * TrBD + sgnA * sgnD * TrAD * TrBC );
+    }
+  }
+
+  double const action = 2.0 * k * ( partI + 2.0 * partII + 4.0 * partIII );
   return action;
 }
 
@@ -660,15 +723,19 @@ double delta_traceD4(
         sum[9] = 0.0;
       }
 
-      const double part_IIa = 2 * a * sum[0] + 2 * b * sum[1] + abs2 * ( sum[2] + sum[3] );
-      const double part_IIb = 4 * a * sum[4] + 4 * b * sum[5] +
-                 2 * ( (a * a - b * b) * (c_B * c_B - d_B * d_B) + 4 * a * b * c_B * d_B + abs2 * B_ii * B_jj );
-      const double part_IIc = 2 * trA * ( a * sum[6] + b * sum[7] ) +
-                 trB * ( 2 * a * sum[8] + 2 * b * sum[9] + abs2 * ( B_ii + B_jj ) ) +
-                 4 * sgnA * sgnB * ( a * c_B + b * d_B ) * ( trAB + a * c_B + b * d_B ) +
-                 trB2 * ( 2 * mixsum + abs2 );
+      const double part_IIa = 2.0 * a * sum[0] + 2.0 * b * sum[1] - abs2 * ( sum[2] + sum[3] );
+      const double part_IIb = 4.0 * a * sum[4] + 4.0 * b * sum[5]
+                            - 2.0 * (
+                                      (a * a - b * b) * (c_B * c_B - d_B * d_B)
+                                      + 4.0 * a * b * c_B * d_B
+                                      + abs2 * B_ii * B_jj
+                                    );
+      const double part_IIc = 2.0 * trA * ( a * sum[6] + b * sum[7] )
+                            + trB * ( 2.0 * a * sum[8] + 2.0 * b * sum[9] - abs2 * ( B_ii + B_jj ) )
+                            + 4.0 * sgnA * sgnB * ( a * c_B + b * d_B ) * ( trAB - ( a * c_B + b * d_B ) )
+                            + trB2 * ( 2.0 * mixsum - abs2 );
 
-      delta2 += 4 * n * part_IIa + 2 * sAB * n * part_IIb + ( 8 + 4 * sAB ) * part_IIc;
+      delta2 += 4.0 * n * part_IIa + 2.0 * sAB * n * part_IIb + ( 8.0 + 4.0 * sAB ) * part_IIc;
 
     } /* END LOOP OVER MATRICES B */
 
@@ -678,8 +745,8 @@ double delta_traceD4(
 
     /* LOOP OVER ALL MATRICES D != C != B != A pairwise, with   *
      * non-vanishing (pre-calculated) traces Tr(A*B*C*D) != 0   */
-    for(int element=0; element<num_trABCD; element++) {
-
+    for( size_t element = 0; element < num_trABCD; ++element )
+    {
       const size_t positionB = sigmaABCD[positionA][9*element+1];
       const size_t positionC = sigmaABCD[positionA][9*element+2];
       const size_t positionD = sigmaABCD[positionA][9*element+3];
@@ -699,70 +766,67 @@ double delta_traceD4(
       const int sgnC = positionC < num_h ? 1 : -1;
       const int sgnD = positionD < num_h ? 1 : -1;
 
-      const double c_B = creal( Matrices[pos_upper+offB] );
-      const double d_B = cimag( Matrices[pos_upper+offB] );
-      const double c_C = creal( Matrices[pos_upper+offC] );
-      const double d_C = cimag( Matrices[pos_upper+offC] );
-      const double c_D = creal( Matrices[pos_upper+offD] );
-      const double d_D = cimag( Matrices[pos_upper+offD] );
+      const double c_B = creal( Matrices[ offB + pos_upper ] );
+      const double d_B = cimag( Matrices[ offB + pos_upper ] );
+      const double c_C = creal( Matrices[ offC + pos_upper ] );
+      const double d_C = cimag( Matrices[ offC + pos_upper ] );
+      const double c_D = creal( Matrices[ offD + pos_upper ] );
+      const double d_D = cimag( Matrices[ offD + pos_upper ] );
 
-      /* Traces over one matrix: */
-      const double trB = tr1(Matrices, num_h, num_l, n, positionB);
-      const double trC = tr1(Matrices, num_h, num_l, n, positionC);
-      const double trD = tr1(Matrices, num_h, num_l, n, positionD);
+      // Traces over one matrix:
+      const double trB = tr1( Matrices, num_h, num_l, n, positionB );
+      const double trC = tr1( Matrices, num_h, num_l, n, positionC );
+      const double trD = tr1( Matrices, num_h, num_l, n, positionD );
 
-      /* Traces over two matrices: */
-      const double trABtrCD = (a * c_B + b * d_B) * tr2(Matrices, num_h, num_l, n, positionC, positionD);
-      const double trACtrBD = (a * c_C + b * d_C) * tr2(Matrices, num_h, num_l, n, positionB, positionD);
-      const double trADtrBC = (a * c_D + b * d_D) * tr2(Matrices, num_h, num_l, n, positionB, positionC);
+      // Traces over two matrices:
+      const double trABtrCD = ( a * c_B + b * d_B ) * tr2( Matrices, num_h, num_l, n, positionC, positionD );
+      const double trACtrBD = ( a * c_C + b * d_C ) * tr2( Matrices, num_h, num_l, n, positionB, positionD );
+      const double trADtrBC = ( a * c_D + b * d_D ) * tr2( Matrices, num_h, num_l, n, positionB, positionC );
 
-      /* Traces over one and three matrices: */
+      // Traces over one and three matrices:
       double trF2 = 0.0;
       double trF3 = 0.0;
       double trF4 = 0.0;
       if( sgnB == 1 )
       {
-        trF2 = a*tr2_real_ij(Matrices, positionC, positionD, pos_x, pos_y);
-        trF2+= a*tr2_real_ij(Matrices, positionD, positionC, pos_x, pos_y);
-        trF2+= b*tr2_imag_ij(Matrices, positionC, positionD, pos_x, pos_y);
-        trF2+= b*tr2_imag_ij(Matrices, positionD, positionC, pos_x, pos_y);
+        trF2 = a*tr2_real_ij( Matrices, positionC, positionD, pos_x, pos_y );
+        trF2+= a*tr2_real_ij( Matrices, positionD, positionC, pos_x, pos_y );
+        trF2+= b*tr2_imag_ij( Matrices, positionC, positionD, pos_x, pos_y );
+        trF2+= b*tr2_imag_ij( Matrices, positionD, positionC, pos_x, pos_y );
       }
       if( sgnC == 1 )
       {
-        trF3 = a*tr2_real_ij(Matrices, positionB, positionD, pos_x, pos_y);
-        trF3+= a*tr2_real_ij(Matrices, positionD, positionB, pos_x, pos_y);
-        trF3+= b*tr2_imag_ij(Matrices, positionB, positionD, pos_x, pos_y);
-        trF3+= b*tr2_imag_ij(Matrices, positionD, positionB, pos_x, pos_y);
+        trF3 = a*tr2_real_ij( Matrices, positionB, positionD, pos_x, pos_y );
+        trF3+= a*tr2_real_ij( Matrices, positionD, positionB, pos_x, pos_y );
+        trF3+= b*tr2_imag_ij( Matrices, positionB, positionD, pos_x, pos_y );
+        trF3+= b*tr2_imag_ij( Matrices, positionD, positionB, pos_x, pos_y );
       }
       if( sgnD == 1 )
       {
-        trF4 = a*tr2_real_ij(Matrices, positionB, positionC, pos_x, pos_y);
-        trF4+= a*tr2_real_ij(Matrices, positionC, positionB, pos_x, pos_y);
-        trF4+= b*tr2_imag_ij(Matrices, positionB, positionC, pos_x, pos_y);
-        trF4+= b*tr2_imag_ij(Matrices, positionC, positionB, pos_x, pos_y);
+        trF4 = a*tr2_real_ij( Matrices, positionB, positionC, pos_x, pos_y );
+        trF4+= a*tr2_real_ij( Matrices, positionC, positionB, pos_x, pos_y );
+        trF4+= b*tr2_imag_ij( Matrices, positionB, positionC, pos_x, pos_y );
+        trF4+= b*tr2_imag_ij( Matrices, positionC, positionB, pos_x, pos_y );
       }
 
       /* Traces over four matrices: */
-      double trAE = (b1+d2)*a*tr3_real_ij(Matrices, positionB, positionC, positionD, pos_x, pos_y);
-      trAE+= (b1+d2)*a*tr3_real_ij(Matrices, positionD, positionC, positionB, pos_x, pos_y);
-      trAE+= (b2+c2)*a*tr3_real_ij(Matrices, positionB, positionD, positionC, pos_x, pos_y);
-      trAE+= (b2+c2)*a*tr3_real_ij(Matrices, positionC, positionD, positionB, pos_x, pos_y);
-      trAE+= (c1+d1)*a*tr3_real_ij(Matrices, positionC, positionB, positionD, pos_x, pos_y);
-      trAE+= (c1+d1)*a*tr3_real_ij(Matrices, positionD, positionB, positionC, pos_x, pos_y);
+      double trAE = ( b1 + d2 ) * a * tr3_real_ij( Matrices, positionB, positionC, positionD, pos_x, pos_y );
+             trAE+= ( b1 + d2 ) * a * tr3_real_ij( Matrices, positionD, positionC, positionB, pos_x, pos_y );
+             trAE+= ( b2 + c2 ) * a * tr3_real_ij( Matrices, positionB, positionD, positionC, pos_x, pos_y );
+             trAE+= ( b2 + c2 ) * a * tr3_real_ij( Matrices, positionC, positionD, positionB, pos_x, pos_y );
+             trAE+= ( c1 + d1 ) * a * tr3_real_ij( Matrices, positionC, positionB, positionD, pos_x, pos_y );
+             trAE+= ( c1 + d1 ) * a * tr3_real_ij( Matrices, positionD, positionB, positionC, pos_x, pos_y );
 
-      trAE+= (b1+d2)*b*tr3_imag_ij(Matrices, positionB, positionC, positionD, pos_x, pos_y);
-      trAE+= (b1+d2)*b*tr3_imag_ij(Matrices, positionD, positionC, positionB, pos_x, pos_y);
-      trAE+= (b2+c2)*b*tr3_imag_ij(Matrices, positionB, positionD, positionC, pos_x, pos_y);
-      trAE+= (b2+c2)*b*tr3_imag_ij(Matrices, positionC, positionD, positionB, pos_x, pos_y);
-      trAE+= (c1+d1)*b*tr3_imag_ij(Matrices, positionC, positionB, positionD, pos_x, pos_y);
-      trAE+= (c1+d1)*b*tr3_imag_ij(Matrices, positionD, positionB, positionC, pos_x, pos_y);
+             trAE+= ( b1 + d2 ) * b * tr3_imag_ij( Matrices, positionB, positionC, positionD, pos_x, pos_y );
+             trAE+= ( b1 + d2 ) * b * tr3_imag_ij( Matrices, positionD, positionC, positionB, pos_x, pos_y );
+             trAE+= ( b2 + c2 ) * b * tr3_imag_ij( Matrices, positionB, positionD, positionC, pos_x, pos_y );
+             trAE+= ( b2 + c2 ) * b * tr3_imag_ij( Matrices, positionC, positionD, positionB, pos_x, pos_y );
+             trAE+= ( c1 + d1 ) * b * tr3_imag_ij( Matrices, positionC, positionB, positionD, pos_x, pos_y );
+             trAE+= ( c1 + d1 ) * b * tr3_imag_ij( Matrices, positionD, positionB, positionC, pos_x, pos_y );
 
-#ifdef LARGE_N
-      delta3 +=   n*trAE;
-#else
-      delta3 += ( n*trAE + s*(trB*trF2 + trC*trF3 + trD*trF4) +
-                  2*s*(sgnA*sgnB*trABtrCD + sgnA*sgnC*trACtrBD + sgnA*sgnD*trADtrBC) );
-#endif
+      delta3 += ( n * trAE + s * ( trB * trF2 + trC * trF3 + trD * trF4 ) +
+                  2.0 * s * ( sgnA * sgnB * trABtrCD + sgnA * sgnC * trACtrBD + sgnA * sgnD * trADtrBC ) );
+
     } /* END LOOP OVER MATRICES */
   } /* END OFF-DIAGONAL CASE */
 
@@ -836,24 +900,24 @@ double delta_traceD4(
       sum[2] = tr3_real_ij(Matrices, positionB, positionA, positionB, pos_x, pos_x);
       sum[3] = tr2_real_ij(Matrices, positionA, positionB, pos_x, pos_x);
 
-      const double part_IIa = 2*a*sum[0] + a*a*sum[1];
-      const double part_IIb = 2*a*sum[2] + a*a*c_B*c_B;
+      const double part_IIa = 2.0 * a * sum[0] - a * a * sum[1];
+      const double part_IIb = 2.0 * a * sum[2] - a * a * c_B * c_B;
       double part_IIc;
       if( sgnA == 1 )
       {
-        part_IIc = 2 * ( a*trAB2 + (a*trA+a*a)*sum[1] ) +
-                   2 * ( a*a*c_B + 2*a*sum[3] ) * trB +
-                   2 * sgnA * sgnB * ( 2*a*c_B*trAB + a*a*c_B*c_B ) +
-                   trB2 * ( 2*a*c + a*a );
+        part_IIc = 2.0 * ( a * trAB2 + ( a * trA - a * a ) * sum[1] )
+                 + 2.0 * ( 2.0 * a * sum[3] - a * a * c_B ) * trB
+                 + 2.0 * sgnA * sgnB * ( 2.0 * a * c_B * trAB - a * a * c_B * c_B )
+                 + trB2 * ( 2.0 * a * c - a * a );
       }
       else
       {
-        part_IIc = 2 * ( a*a*c_B + 2*a*sum[3] ) * trB +
-		               2 * sgnA * sgnB * ( 2*a*c_B*trAB + a*a*c_B*c_B ) +
-                   trB2 * ( 2*a*c + a*a );
+        part_IIc = 2.0 * ( 2.0 * a * sum[3] - a * a * c_B ) * trB
+                 + 2.0 * sgnA * sgnB * ( 2.0 * a * c_B * trAB - a * a * c_B * c_B )
+                 + trB2 * ( 2.0 * a * c - a * a );
       }
 
-      delta2 += 4*n*part_IIa + 2*sAB*n*part_IIb + (4+2*sAB)*part_IIc;
+      delta2 += 4.0 * n * part_IIa + 2.0 * sAB * n * part_IIb + ( 4.0 + 2.0 * sAB ) * part_IIc;
 
     } /* END LOOP OVER MATRICES B */
 
@@ -863,8 +927,8 @@ double delta_traceD4(
 
     /* LOOP OVER ALL MATRICES D != C != B != A pairwise, with   *
      * non-vanishing (pre-calculated) traces Tr(A*B*C*D) != 0   */
-    for(int element=0; element<num_trABCD; element++) {
-
+    for( size_t element = 0; element < num_trABCD; ++element )
+    {
       const size_t positionB = sigmaABCD[positionA][9*element+1];
       const size_t positionC = sigmaABCD[positionA][9*element+2];
       const size_t positionD = sigmaABCD[positionA][9*element+3];
@@ -926,12 +990,8 @@ double delta_traceD4(
       trAE+= (b2+c2)*tr3_real_ij(Matrices, positionB, positionD, positionC, pos_x, pos_x);
       trAE+= (c1+d1)*tr3_real_ij(Matrices, positionC, positionB, positionD, pos_x, pos_x);
 
-#ifdef LARGE_N
-      delta3 += a * n * trAE;
-#else
       delta3 += a * ( n*trAE + trF1 + s*(trB*trF2 + trC*trF3 + trD*trF4) +
                       s*(sgnA*sgnB*trABtrCD + sgnA*sgnC*trACtrBD + sgnA*sgnD*trADtrBC) );
-#endif
     } /* END LOOP OVER MATRICES */
   } /* END DIAGONAL CASE */
 
