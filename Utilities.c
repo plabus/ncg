@@ -6,7 +6,6 @@
 #include <inttypes.h>
 #include <sys/types.h>
 #include <sys/time.h>
-#include "Constants.h"
 #include "Utilities.h"
 
 // Returns time in seconds (double)

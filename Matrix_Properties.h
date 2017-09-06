@@ -3,10 +3,14 @@
 
 struct Matrix_Properties
 {
+  size_t n;
+  size_t p;
+  size_t q;
+  size_t d;
+  size_t s;
+  size_t k;
   size_t num_h;
   size_t num_l;
-  size_t n;
-  size_t k;
   double g2;
   double g4;
 };

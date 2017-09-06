@@ -2,7 +2,7 @@
 #define _MONTECARLO_H_
 
 #include "Random.h"
-#include "Constants.h"
+#include "Precision.h"
 #include "Matrix_Properties.h"
 
 // Types of HERMITIAN matrices

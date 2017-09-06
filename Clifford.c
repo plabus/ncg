@@ -3,7 +3,6 @@
 #include <complex.h>
 #include <math.h>
 #include "Clifford.h"
-#include "Constants.h"
 
 #define MAX(x, y) (((x) > (y)) ? (x) : (y))
 #define sgn(x) ((x > 0) ? 1 : ((x < 0) ? -1 : 0))
@@ -479,94 +478,115 @@ void Generate_Clifford_Odd_Group(int p, int q, float complex *big_gammas, int *n
 
 }
 
-void Calculate_Trace_Gamma_ABAB(float complex *Gamma_Matrices, int *sigmaAB, int NUM_H) {
-  int offi, offj;
-  int num_m = (int)pow(2,D-1);
-  float complex trace;
+void Calculate_Trace_Gamma_ABAB(
+    float complex const *Gamma_Matrices,
+    struct Matrix_Properties const prop,
+    int *sigmaAB
+    )
+{
+  const size_t num_h = prop.num_h;
+  const size_t num_m = prop.num_h + prop.num_l;
+  const size_t k = prop.k;
 
-  for(int i=0;i<num_m;++i) {
-    for(int j=i+1;j<num_m;++j) {
+  for(size_t i = 0; i<num_m; ++i)
+  {
+    for(size_t j = i+1;j<num_m; ++j)
+    {
 
-      trace = 0.f;
-      offi = i*K*K;
-      offj = j*K*K;
+      double complex trace = 0.f;
+      const size_t offi = i * k * k;
+      const size_t offj = j * k * k;
 
-      for(int ii=0;ii<K;++ii)
-        for(int jj=0;jj<K;++jj)
-          for(int ll=0;ll<K;++ll)
-            for(int mm=0;mm<K;++mm)
-              trace += Gamma_Matrices[ii*K+jj+offi] * Gamma_Matrices[jj*K+ll+offj] *
-                Gamma_Matrices[ll*K+mm+offi] * Gamma_Matrices[mm*K+ii+offj];
+      for(size_t ii = 0; ii<k; ++ii)
+        for(size_t jj = 0; jj<k; ++jj)
+          for(size_t ll = 0; ll<k; ++ll)
+            for(size_t mm = 0; mm<k; ++mm)
+              trace += Gamma_Matrices[ii*k+jj+offi] * Gamma_Matrices[jj*k+ll+offj] *
+                Gamma_Matrices[ll*k+mm+offi] * Gamma_Matrices[mm*k+ii+offj];
 
-      if( fabs(creal(trace))>0 ) {
-        trace *= (i<NUM_H?1:-1)*(j<NUM_H?1:-1);
+      if( fabs(creal(trace)) > 0.0 )
+      {
+        trace *= (i<num_h?1:-1)*(j<num_h?1:-1);
         sigmaAB[i*num_m+j] = sgn(creal(trace));
         sigmaAB[j*num_m+i] = sgn(creal(trace));
       }
 
     }
   }
-
 }
 
-int calculate_sigmaABCD(float complex *Gamma_Matrices, int a, int b, int c, int d, int NUM_H) {
-  float trace = 0.f;
-  int offa=a*K*K;
-  int offb=b*K*K;
-  int offc=c*K*K;
-  int offd=d*K*K;
+int calculate_sigmaABCD(
+    float complex const *Gamma_Matrices,
+    size_t const a,
+    size_t const b,
+    size_t const c,
+    size_t const d,
+    struct Matrix_Properties const prop
+    )
+{
+  size_t const num_h = prop.num_h;
+  size_t const k = prop.k;
+
+  size_t const offa = a * k * k;
+  size_t const offb = b * k * k;
+  size_t const offc = c * k * k;
+  size_t const offd = d * k * k;
+
+  double trace = 0.f;
 
   /* TRACE OVER FOUR MATRICES */
-  for(int ii=0;ii<K;++ii)
-    for(int jj=0;jj<K;++jj)
-      for(int ll=0;ll<K;++ll)
-        for(int mm=0;mm<K;++mm)
-          trace += Gamma_Matrices[ii*K+jj+offa] * Gamma_Matrices[jj*K+ll+offb] *
-                   Gamma_Matrices[ll*K+mm+offc] * Gamma_Matrices[mm*K+ii+offd];
+  for(size_t ii=0;ii<k;++ii)
+    for(size_t jj=0;jj<k;++jj)
+      for(size_t ll=0;ll<k;++ll)
+        for(size_t mm=0;mm<k;++mm)
+          trace += Gamma_Matrices[ii*k+jj+offa] * Gamma_Matrices[jj*k+ll+offb] *
+                   Gamma_Matrices[ll*k+mm+offc] * Gamma_Matrices[mm*k+ii+offd];
   /* Include i's coming from L's and cast trace to int. *
    * Note that sgn = +1 implies that the result is real */
-  trace *= (a<NUM_H?1:I)*(b<NUM_H?1:I)*(c<NUM_H?1:I)*(d<NUM_H?1:I);
+  trace *= (a<num_h?1:I)*(b<num_h?1:I)*(c<num_h?1:I)*(d<num_h?1:I);
   return sgn(creal(trace));
 }
 
-void Calculate_Trace_Gamma_ABCD(float complex *Gamma_Matrices, int **sigmaABCD, int NUM_H) {
-
-  int counter;
-  int num_m = pow(2,D-1);
-  int total_sign;
-  int comb1;
-  int comb2;
-  int comb3;
-  int comb4;
-  int comb5;
-  int comb6;
+void Calculate_Trace_Gamma_ABCD(
+    float complex const *Gamma_Matrices,
+    struct Matrix_Properties const prop,
+    int **sigmaABCD
+    )
+{
+  size_t const num_h = prop.num_h;
+  size_t const num_m = prop.num_h + prop.num_l;
 
   /* LOOPING OVER FOUR PAIRWISE DIFFERENT MATRICES */
-  for(int a=0;a<num_m;++a) {
-    counter = 0;
+  for(int a=0;a<num_m;++a)
+  {
+    size_t counter = 0;
 
-    for(int b=0;b<num_m;++b) {
+    for(int b=0;b<num_m;++b)
+    {
       if(b==a) continue;
 
-      for(int c=0;c<num_m;++c) {
+      for(int c=0;c<num_m;++c)
+      {
         if(c<=b || c==a) continue;
 
-        for(int d=0;d<num_m;++d) {
+        for(int d=0;d<num_m;++d)
+        {
           if(d<=b || d<=c || d==a) continue;
 
           /* (Anti-) commutators of Hermitian matrices vanish if there aren't *
            * pairs of (tracefree) non-tracefree matrices <=> sgn = -1.        */
-	  total_sign = (a<NUM_H?1:-1)*(b<NUM_H?1:-1)*(c<NUM_H?1:-1)*(d<NUM_H?1:-1);
-          if(total_sign==-1) continue;
-          comb1 = calculate_sigmaABCD(Gamma_Matrices, a, b, c, d, NUM_H);
+          int const total_sign = (a<num_h?1:-1)*(b<num_h?1:-1)*(c<num_h?1:-1)*(d<num_h?1:-1);
+          if( total_sign == -1 ) continue;
+          int const comb1 = calculate_sigmaABCD(Gamma_Matrices, a, b, c, d, prop);
 
           /* SET VALUES IF THERE ARE NON-ZERO */
-          if(comb1!=0) {
-            comb2 = calculate_sigmaABCD(Gamma_Matrices, a, b, d, c, NUM_H);
-            comb3 = calculate_sigmaABCD(Gamma_Matrices, a, c, b, d, NUM_H);
-            comb4 = calculate_sigmaABCD(Gamma_Matrices, a, c, d, b, NUM_H);
-            comb5 = calculate_sigmaABCD(Gamma_Matrices, a, d, b, c, NUM_H);
-            comb6 = calculate_sigmaABCD(Gamma_Matrices, a, d, c, b, NUM_H);
+          if( comb1 != 0 )
+          {
+            int const comb2 = calculate_sigmaABCD(Gamma_Matrices, a, b, d, c, prop);
+            int const comb3 = calculate_sigmaABCD(Gamma_Matrices, a, c, b, d, prop);
+            int const comb4 = calculate_sigmaABCD(Gamma_Matrices, a, c, d, b, prop);
+            int const comb5 = calculate_sigmaABCD(Gamma_Matrices, a, d, b, c, prop);
+            int const comb6 = calculate_sigmaABCD(Gamma_Matrices, a, d, c, b, prop);
 
             /* write to sigma with the following data layout:               *
              * sigmaABCD[A][] = {#, B, C, D, b1, b2, c1, c2, d1, d2, ... }  */

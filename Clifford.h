@@ -1,6 +1,7 @@
 #ifndef __CLIFF_HEADER__
 #define __CLIFF_HEADER__
 
+#include "Matrix_Properties.h"
 #define MAX(x, y) (((x) > (y)) ? (x) : (y))
 
 void printMint(int *matrix, int n);
@@ -22,7 +23,24 @@ void Reshuffle_Clifford_Group(int p, int q, float complex *big_gammas, int num_h
 void Generate_Clifford_Group(int p, int q, float complex *big_gammas, int *num_h, int *num_l);
 void Generate_Clifford_Odd_Group(int p, int q, float complex *big_gammas, int *num_h, int *num_l);
 
-void Calculate_Trace_Gamma_ABAB(float complex *Gamma_Matrices, int *sigmaAB, int NUM_H);
-int calculate_sigmaABCD(float complex *Gamma_Matrices, int a, int b, int c, int d, int NUM_H);
-void Calculate_Trace_Gamma_ABCD(float complex *Gamma_Matrices, int **sigmaABCD, int NUM_H);
+void Calculate_Trace_Gamma_ABAB(
+    float complex const *Gamma_Matrices,
+    struct Matrix_Properties const prop,
+    int *sigmaAB
+    );
+
+int calculate_sigmaABCD(
+    float complex const *Gamma_Matrices,
+    size_t const a,
+    size_t const b,
+    size_t const c,
+    size_t const d,
+    struct Matrix_Properties const prop
+    );
+
+void Calculate_Trace_Gamma_ABCD(
+    float complex const *Gamma_Matrices,
+    struct Matrix_Properties const prop,
+    int **sigmaABCD
+    );
 #endif

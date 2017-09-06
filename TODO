@@ -14,6 +14,8 @@ struct for clifford stuff (shall this be integrated into Matrix_Properties??)
 
 One struct for all matrices including data (3d array) and parameters (incl. Clifford) ???
 
+Guarantee trace condition for L_TYPE when contructing new candiate
+
 Fixed RNG seed
 
 Separate utility for EV measurements

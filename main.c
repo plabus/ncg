@@ -7,7 +7,7 @@
 #include <string.h>
 // #include <mpi.h>
 // #include <omp.h>
-#include "Constants.h"
+#include "Precision.h"
 #include "Utilities.h"
 #include "Clifford.h"
 #include "Random.h"
@@ -19,6 +19,17 @@
 // precision REAL as string
 #define xstr(a) str(a)
 #define str(a) #a
+
+// Fundamental Parameters
+#define N 5
+#define P 3
+#define Q 1
+#define G2 (1.0)
+#define G4 (1.0)
+
+// User Parameters
+#define CHAIN_LENGTH (1000*N*N)
+#define WRITEOUT_FREQ (1*N*N) // in SWEEPs
 
 int main()
 {
@@ -36,40 +47,64 @@ int main()
   int start_sweep = 0;
   int rank = 0;
   // int nproc = 0;
-  int NUM_H, NUM_L;
+  int NUM_H = 0;
+  int NUM_L = 0;
 
+  // Initialise parameters
+  // TODO: This needs NUM_H and NUM_L to be set, so Generate_Clifford_Odd_Group
+  // need to have been called by now (otherwise we loose const-ness).
+  // Can this be improved?
+  struct Matrix_Properties parameters = {
+    .n = N,
+    .p = P,
+    .q = Q,
+    .d = P + Q,
+    .s = ( Q - P + 64 ) % 8,
+    .k = (P+Q) % 2 ? (int) pow( 2, ((P+Q)-1)/2 ) : (int) pow( 2, (P+Q)/2 ),
+    .num_h = NUM_H,
+    .num_l = NUM_L,
+    .g2 = G2,
+    .g4 = G4
+  };
 
   // Generate the ODD Clifford Group and number of (anti-)hermitian matrices
   // Hermitian Matrices are stored first, anti-hermitian matrices second
-  int size_gammas = (int) pow(2, D-1) * K * K;
-  float complex *Gamma_Matrices = (float complex*) malloc(size_gammas*sizeof(float complex));
-  Generate_Clifford_Odd_Group(P, Q, Gamma_Matrices, &NUM_H, &NUM_L);
+  size_t const size_gammas = (int) pow( 2, parameters.d - 1 ) * parameters.k * parameters.k;
+  float complex *Gamma_Matrices = (float complex *) malloc( size_gammas * sizeof(float complex) );
+  Generate_Clifford_Odd_Group(parameters.p, parameters.q, Gamma_Matrices, &NUM_H, &NUM_L);
+  parameters.num_h = NUM_H;
+  parameters.num_l = NUM_L;
+  size_t const num_m = parameters.num_h + parameters.num_l;
 
   // Allocate matrix SigmaAB and calulate its values from the Gammas
-  int *SigmaAB = (int*) calloc(NUM_M*NUM_M,sizeof(int));
-  Calculate_Trace_Gamma_ABAB(Gamma_Matrices, SigmaAB, NUM_H);
+  int *SigmaAB = (int*) calloc( num_m * num_m, sizeof(int) );
+  Calculate_Trace_Gamma_ABAB(Gamma_Matrices, parameters, SigmaAB);
 
   // Allocate matrix sigmaABCD and calulate its values from the Gammas
-  int **SigmaABCD = (int **)malloc(NUM_M*sizeof(int*));
-  // Adjust that size for less memory use and higher D:
-  for(int i=0; i<NUM_M; i++) SigmaABCD[i] = (int *)malloc(7*D*D*D*D * sizeof(int));
-  Calculate_Trace_Gamma_ABCD(Gamma_Matrices, SigmaABCD, NUM_H);
-
+  int **SigmaABCD = (int **) malloc( num_m * sizeof(int *) );
+  // Adjust that size for less memory use and higher dimension d:
+  for( size_t i = 0; i < num_m; ++i )
+  {
+    SigmaABCD[i] = (int *) malloc(
+        7 * parameters.d * parameters.d * parameters.d * parameters.d * sizeof(int)
+        );
+  }
+  Calculate_Trace_Gamma_ABCD(Gamma_Matrices, parameters, SigmaABCD);
 
   // Melissa O'NEILL's RNG lib seeded with sys time and mem address
   // http://www.pcg-random.org/
-  struct pcg32_random_t rngs[NUM_M];
-  for(int i=0;i<NUM_M;++i) {
+  struct pcg32_random_t rngs[num_m];
+  for(int i=0;i<num_m;++i) {
     pcg32_srandom_r(&rngs[i], time(NULL), (intptr_t)&rngs[i]);
   }
 
-
   // Array allocations
   REAL complex *Matrices;
-  Matrices = (REAL complex *) calloc(NUM_M*SWEEP,sizeof(REAL complex));
+  Matrices = (REAL complex *) calloc( num_m * parameters.n * parameters.n, sizeof(REAL complex) );
 
   // Memory needed for H's and L's, and gamma matrices
-  const int memory = NUM_M * SWEEP * sizeof(REAL complex) + size_gammas * sizeof(float complex);
+  const int memory = num_m * parameters.n * parameters.n * sizeof(REAL complex)
+                   + size_gammas * sizeof(float complex);
 
 /////////////////////////////////////////////////////////////////////
 //                                                                 //
@@ -89,14 +124,6 @@ int main()
 
   const double start_time = cclock();
 
-  const struct Matrix_Properties parameters = {
-    .num_h = NUM_H,
-    .num_l = NUM_L,
-    .n = N,
-    .k = K,
-    .g2 = G2,
-    .g4 = G4
-  };
   double action = Matrices_Initialisation( rngs, Matrices, parameters, SigmaAB, SigmaABCD );
 
   if(rank==0)
@@ -111,28 +138,29 @@ int main()
     // fprintf(stdout, "  OMP Threads                      : %d\n", omp_get_max_threads());
     fprintf(stdout, "  Memory used                      : %.3g MiB\n", memory/1048576.);
     fprintf(stdout, "  Starting sweep                   : %d\n", start_sweep);
-    fprintf(stdout, "  Chain elements to be produced    : %d sweep\n", CHAIN_LENGTH/SWEEP);
+    fprintf(stdout, "  Chain elements to be produced    : %zu sweep\n",
+        CHAIN_LENGTH / parameters.n / parameters.n);
     fprintf(stdout, "  Starting time                    : %s\n\n", buff);
 
     fprintf(stdout, "  Geometry:\n");
     fprintf(stdout, "  ---------\n\n");
 
-    fprintf(stdout, "  Type                             : (%d,%d)\n", P, Q);
+    fprintf(stdout, "  Type                             : (%zu,%zu)\n", parameters.p, parameters.q);
     fprintf(stdout, "  Matrix Size N                    : %d\n", N);
     fprintf(stdout, "  Action                           : S = Tr( %.1f * D^2 + %.1f * D^4 )\n", G2, G4);
     fprintf(stdout, "  Initial value                    : S = %f\n\n", action);
 
-    fprintf(stdout, "  Dimension                        : %d, (K = %d)\n", D, K);
-    fprintf(stdout, "  Signature                        : %d\n", S);
-    fprintf(stdout, "  Number      Hermitian Matrices H : %d\n", NUM_H);
-    fprintf(stdout, "  Number Anti-Hermitian Matrices L : %d\n\n", NUM_L);
+    fprintf(stdout, "  Dimension                        : %zu, (K = %zu)\n", parameters.d, parameters.k);
+    fprintf(stdout, "  Signature                        : %zu\n", parameters.s);
+    fprintf(stdout, "  Number      Hermitian Matrices H : %zu\n", parameters.num_h);
+    fprintf(stdout, "  Number Anti-Hermitian Matrices L : %zu\n\n", parameters.num_l);
 
     printf("===============================================\n\n");
 
     fprintf(stdout, "  GENERATING CHAIN:\n\n");
     fprintf(stdout,
-        "  time \t rank \t sweep \t action S \t acceptance (accumulated) \t acceptance (last %d sweep)\n",
-        WRITEOUT_FREQ/SWEEP
+        "  time \t rank \t sweep \t action S \t acceptance (accumulated) \t acceptance (last %zu sweep)\n",
+        WRITEOUT_FREQ / parameters.n / parameters.n
         );
   }
 
@@ -163,8 +191,8 @@ int main()
       // finally tune the step size according to recent acceptance
       // (Remember, we are counting accepts for each matrix and each step t)
       uint64_t accepted_sweep = accepted - accepted_old;
-      double acc_rate_accum = (double) accepted / ( t * NUM_M );
-      double acc_rate_sweep = (double) accepted_sweep / ( WRITEOUT_FREQ * NUM_M );
+      double acc_rate_accum = (double) accepted / ( t * num_m );
+      double acc_rate_sweep = (double) accepted_sweep / ( WRITEOUT_FREQ * num_m );
       accepted_old = accepted;
       tune_step_size( acc_rate_sweep, &step_size );
 
@@ -173,7 +201,7 @@ int main()
       fprintf(
           stdout,
           "  %s \t %3d \t %5lu \t %.6f \t %4.2f \t %4.2f\n",
-          buff, rank, t/SWEEP, action, 100.0*acc_rate_accum, 100.0*acc_rate_sweep
+          buff, rank, t / parameters.n / parameters.n, action, 100.0 * acc_rate_accum, 100.0 * acc_rate_sweep
           );
     }
   }
@@ -192,7 +220,7 @@ int main()
   }
 
   free(SigmaAB);
-  for( int i = 0; i < NUM_M; ++i )
+  for( int i = 0; i < num_m; ++i )
   {
     free(SigmaABCD[i]);
   }

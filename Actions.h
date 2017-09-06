@@ -1,8 +1,8 @@
 #ifndef _ACTIONS_H_
 #define _ACTIONS_H_
 
-#include "Constants.h"
 #include "MonteCarlo.h"
+#include "Precision.h"
 
 // Calculates the trace of a single matrix in the array Matrices at position pos1
 double tr1(
@@ -49,11 +49,55 @@ double tr4(
     int const pos4                // position of the 4th matrix inside the Matrices array
     );
 
-double tr2_real_ij(REAL complex const *Matrices, int pos1, int pos2, int pos_x, int pos_y);
-double tr2_imag_ij(REAL complex const *Matrices, int pos1, int pos2, int pos_x, int pos_y);
-double tr3_real_ij(REAL complex const *Matrices, int pos1, int pos2, int pos3, int pos_x, int pos_y);
-double tr3_imag_ij(REAL complex const *Matrices, int pos1, int pos2, int pos3, int pos_x, int pos_y);
-double row_norm_squared(REAL complex const *Matrices, int pos1, int pos_row);
+// Calculates \sum_n Re( A_in B_nj )
+double tr2_real_ij(
+    REAL complex const *Matrices,        // array of matrices
+    struct Matrix_Properties const prop, // includes num_h, num_l, n and k
+    size_t const pos1,                   // position of matrix A within Matrices array
+    size_t const pos2,                   // position of matrix B within Matrices array
+    size_t const pos_x,                  // one of the indices contributing to (i, j)
+    size_t const pos_y                   // the other of the indices contributing to (i, j)
+    );
+
+// Calculates \sum_n Im( A_in B_nj )
+double tr2_imag_ij(
+    REAL complex const *Matrices,        // array of matrices
+    struct Matrix_Properties const prop, // includes num_h, num_l, n and k
+    size_t const pos1,                   // position of matrix A within Matrices array
+    size_t const pos2,                   // position of matrix B within Matrices array
+    size_t const pos_x,                  // one of the indices contributing to (i, j)
+    size_t const pos_y                   // the other of the indices contributing to (i, j)
+    );
+
+// Calculates \sum_n \sum_m Re( A_in B_nm C_mj )
+double tr3_real_ij(
+    REAL complex const *Matrices,        // array of matrices
+    struct Matrix_Properties const prop, // includes num_h, num_l, n and k
+    size_t const pos1,                   // position of matrix A within Matrices array
+    size_t const pos2,                   // position of matrix B within Matrices array
+    size_t const pos3,                   // position of matrix C within Matrices array
+    size_t const pos_x,                  // one of the indices contributing to (i, j)
+    size_t const pos_y                   // the other of the indices contributing to (i, j)
+    );
+
+// Calculates \sum_n \sum_m Im( A_in B_nm C_mj )
+double tr3_imag_ij(
+    REAL complex const *Matrices,        // array of matrices
+    struct Matrix_Properties const prop, // includes num_h, num_l, n and k
+    size_t const pos1,                   // position of matrix A within Matrices array
+    size_t const pos2,                   // position of matrix B within Matrices array
+    size_t const pos3,                   // position of matrix C within Matrices array
+    size_t const pos_x,                  // one of the indices contributing to (i, j)
+    size_t const pos_y                   // the other of the indices contributing to (i, j)
+    );
+
+// Calculates \sum_n |A_in|^2
+double row_norm_squared(
+    REAL complex const *Matrices,        // array of matrices
+    struct Matrix_Properties const prop, // includes num_h, num_l, n and k
+    size_t const pos,                    // position of matrix A within Matrices array
+    size_t const pos_row                 // index i, indicating the row of the matrix to be squared
+    );
 
 // Calculate the trace of a matrix H
 double tr_H(

@@ -1,5 +1,4 @@
 #include <complex.h>
-#include "Constants.h"
 #include "Measurements.h"
 
 // Given a (NxN) matrix m compute {m,.}

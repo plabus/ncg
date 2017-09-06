@@ -5,7 +5,6 @@
 #include "MonteCarlo.h"
 #include "Random.h"
 #include "Actions.h"
-#include "Constants.h"
 
 // Initialise a random HERMITIAN matrix of type H or type L (that is tracefree or not),
 // where the random elements lie in range [ -step_length_diag, step_length_diag ]

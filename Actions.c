@@ -4,7 +4,6 @@
 #include <complex.h>
 #include <inttypes.h>
 #include "Actions.h"
-#include "Constants.h"
 
 /**********************************************************************************************/
 
@@ -179,111 +178,151 @@ double tr4(
 
 /**********************************************************************************************/
 
-double tr2_real_ij(REAL complex const *Matrices, int pos1, int pos2, int pos_x, int pos_y) {
-  double sum = 0.f;
-  int off1 = pos1*SWEEP;
-  int off2 = pos2*SWEEP;
+// Calculates \sum_n Re( A_in B_nj )
+double tr2_real_ij(
+    REAL complex const *Matrices,        // array of matrices
+    struct Matrix_Properties const prop, // includes num_h, num_l, n and k
+    size_t const pos1,                   // position of matrix A within Matrices array
+    size_t const pos2,                   // position of matrix B within Matrices array
+    size_t const pos_x,                  // one of the indices contributing to (i, j)
+    size_t const pos_y                   // the other of the indices contributing to (i, j)
+    )
+{
+  size_t const n = prop.n;
+  size_t const off1 = pos1 * n * n;
+  size_t const off2 = pos2 * n * n;
 
-  /* We always assume i < j */
-  int i = pos_x<=pos_y ? pos_x : pos_y;
-  int j = pos_x<=pos_y ? pos_y : pos_x;
+  // We always assume i < j
+  size_t const i = pos_x <= pos_y ? pos_x : pos_y;
+  size_t const j = pos_x <= pos_y ? pos_y : pos_x;
 
-  for(int b=0;b<N;b++) {
-    sum += creal( Matrices[i*N+b+off1] ) * creal( Matrices[b*N+j+off2] );
-    sum -= cimag( Matrices[i*N+b+off1] ) * cimag( Matrices[b*N+j+off2] );
+  double sum = 0.0;
+
+  for( size_t b = 0; b < n; ++b )
+  {
+    sum += creal( Matrices[i*n+b+off1] ) * creal( Matrices[b*n+j+off2] );
+    sum -= cimag( Matrices[i*n+b+off1] ) * cimag( Matrices[b*n+j+off2] );
   }
 
   return sum;
 }
 
-
-double tr2_imag_ij(REAL complex const *Matrices, int pos1, int pos2, int pos_x, int pos_y) {
-  double sum = 0.f;
-  int off1 = pos1*SWEEP;
-  int off2 = pos2*SWEEP;
+// Calculates \sum_n Im( A_in B_nj )
+double tr2_imag_ij(
+    REAL complex const *Matrices,        // array of matrices
+    struct Matrix_Properties const prop, // includes num_h, num_l, n and k
+    size_t const pos1,                   // position of matrix A within Matrices array
+    size_t const pos2,                   // position of matrix B within Matrices array
+    size_t const pos_x,                  // one of the indices contributing to (i, j)
+    size_t const pos_y                   // the other of the indices contributing to (i, j)
+    )
+{
+  size_t const n = prop.n;
+  size_t const off1 = pos1 * n * n;
+  size_t const off2 = pos2 * n * n;
 
   /* We always assume i < j */
-  int i = pos_x<=pos_y ? pos_x : pos_y;
-  int j = pos_x<=pos_y ? pos_y : pos_x;
+  size_t const i = pos_x <= pos_y ? pos_x : pos_y;
+  size_t const j = pos_x <= pos_y ? pos_y : pos_x;
 
-  for(int b=0;b<N;b++) {
-    sum += creal( Matrices[i*N+b+off1] ) * cimag( Matrices[b*N+j+off2] );
-    sum += cimag( Matrices[i*N+b+off1] ) * creal( Matrices[b*N+j+off2] );
+  double sum = 0.0;
+
+  for( size_t b = 0; b < n; ++b )
+  {
+    sum += creal( Matrices[i*n+b+off1] ) * cimag( Matrices[b*n+j+off2] );
+    sum += cimag( Matrices[i*n+b+off1] ) * creal( Matrices[b*n+j+off2] );
   }
 
   return sum;
 }
 
-
-double tr3_real_ij(REAL complex const *Matrices, int pos1, int pos2, int pos3, int pos_x, int pos_y) {
-  double sum = 0.f;
-  int off1 = pos1*SWEEP;
-  int off2 = pos2*SWEEP;
-  int off3 = pos3*SWEEP;
+// Calculates \sum_n \sum_m Re( A_in B_nm C_mj )
+double tr3_real_ij(
+    REAL complex const *Matrices,        // array of matrices
+    struct Matrix_Properties const prop, // includes num_h, num_l, n and k
+    size_t const pos1,                   // position of matrix A within Matrices array
+    size_t const pos2,                   // position of matrix B within Matrices array
+    size_t const pos3,                   // position of matrix C within Matrices array
+    size_t const pos_x,                  // one of the indices contributing to (i, j)
+    size_t const pos_y                   // the other of the indices contributing to (i, j)
+    )
+{
+  size_t const n = prop.n;
+  size_t const off1 = pos1* n * n;
+  size_t const off2 = pos2* n * n;
+  size_t const off3 = pos3* n * n;
 
   /* We always assume i < j */
-  int i = pos_x<=pos_y ? pos_x : pos_y;
-  int j = pos_x<=pos_y ? pos_y : pos_x;
+  size_t const i = pos_x<=pos_y ? pos_x : pos_y;
+  size_t const j = pos_x<=pos_y ? pos_y : pos_x;
 
-  for(int b=0;b<N;b++) {
-    for(int c=0;c<N;c++) {
-      sum += creal( Matrices[i*N+b+off1] ) * creal( Matrices[b*N+c+off2] ) * creal( Matrices[c*N+j+off3] );
-      sum -= cimag( Matrices[i*N+b+off1] ) * cimag( Matrices[b*N+c+off2] ) * creal( Matrices[c*N+j+off3] );
-      sum -= creal( Matrices[i*N+b+off1] ) * cimag( Matrices[b*N+c+off2] ) * cimag( Matrices[c*N+j+off3] );
-      sum -= cimag( Matrices[i*N+b+off1] ) * creal( Matrices[b*N+c+off2] ) * cimag( Matrices[c*N+j+off3] );
+  double sum = 0.0;
+
+  for( size_t b = 0; b < n; ++b )
+  {
+    for( size_t c = 0; c < n; ++c )
+    {
+      sum += creal( Matrices[i*n+b+off1] ) * creal( Matrices[b*n+c+off2] ) * creal( Matrices[c*n+j+off3] );
+      sum -= cimag( Matrices[i*n+b+off1] ) * cimag( Matrices[b*n+c+off2] ) * creal( Matrices[c*n+j+off3] );
+      sum -= creal( Matrices[i*n+b+off1] ) * cimag( Matrices[b*n+c+off2] ) * cimag( Matrices[c*n+j+off3] );
+      sum -= cimag( Matrices[i*n+b+off1] ) * creal( Matrices[b*n+c+off2] ) * cimag( Matrices[c*n+j+off3] );
     }
   }
 
   return sum;
 }
 
-
-double tr3_imag_ij(REAL complex const *Matrices, int pos1, int pos2, int pos3, int pos_x, int pos_y) {
-  double sum = 0.f;
-  int off1 = pos1*SWEEP;
-  int off2 = pos2*SWEEP;
-  int off3 = pos3*SWEEP;
+// Calculates \sum_n \sum_m Im( A_in B_nm C_mj )
+double tr3_imag_ij(
+    REAL complex const *Matrices,        // array of matrices
+    struct Matrix_Properties const prop, // includes num_h, num_l, n and k
+    size_t const pos1,                   // position of matrix A within Matrices array
+    size_t const pos2,                   // position of matrix B within Matrices array
+    size_t const pos3,                   // position of matrix C within Matrices array
+    size_t const pos_x,                  // one of the indices contributing to (i, j)
+    size_t const pos_y                   // the other of the indices contributing to (i, j)
+    )
+{
+  size_t const n = prop.n;
+  size_t const off1 = pos1 * n * n;
+  size_t const off2 = pos2 * n * n;
+  size_t const off3 = pos3 * n * n;
 
   /* We always assume i < j */
-  int i = pos_x<=pos_y ? pos_x : pos_y;
-  int j = pos_x<=pos_y ? pos_y : pos_x;
+  size_t const i = pos_x <= pos_y ? pos_x : pos_y;
+  size_t const j = pos_x <= pos_y ? pos_y : pos_x;
 
-  for(int b=0;b<N;b++) {
-    for(int c=0;c<N;c++) {
-      sum -= cimag( Matrices[i*N+b+off1] ) * cimag( Matrices[b*N+c+off2] ) * cimag( Matrices[c*N+j+off3] );
-      sum += creal( Matrices[i*N+b+off1] ) * creal( Matrices[b*N+c+off2] ) * cimag( Matrices[c*N+j+off3] );
-      sum += creal( Matrices[i*N+b+off1] ) * cimag( Matrices[b*N+c+off2] ) * creal( Matrices[c*N+j+off3] );
-      sum += cimag( Matrices[i*N+b+off1] ) * creal( Matrices[b*N+c+off2] ) * creal( Matrices[c*N+j+off3] );
+  double sum = 0.0;
+
+  for( size_t b = 0; b < n; ++b )
+  {
+    for( size_t c = 0; c < n; ++c )
+    {
+      sum -= cimag( Matrices[i*n+b+off1] ) * cimag( Matrices[b*n+c+off2] ) * cimag( Matrices[c*n+j+off3] );
+      sum += creal( Matrices[i*n+b+off1] ) * creal( Matrices[b*n+c+off2] ) * cimag( Matrices[c*n+j+off3] );
+      sum += creal( Matrices[i*n+b+off1] ) * cimag( Matrices[b*n+c+off2] ) * creal( Matrices[c*n+j+off3] );
+      sum += cimag( Matrices[i*n+b+off1] ) * creal( Matrices[b*n+c+off2] ) * creal( Matrices[c*n+j+off3] );
     }
   }
 
   return sum;
 }
 
+// Calculates \sum_n |A_in|^2
+double row_norm_squared(
+    REAL complex const *Matrices,        // array of matrices
+    struct Matrix_Properties const prop, // includes num_h, num_l, n and k
+    size_t const pos,                    // position of matrix A within Matrices array
+    size_t const pos_row                 // index i, indicating the row of the matrix to be squared
+    )
+{
+  size_t const n = prop.n;
+  size_t const off = pos * n * n + pos_row * n;
 
-double matrix_norm_squared(REAL complex const *Matrices, int pos1) {
-  double sum_off_diag = 0.f;
-  double trace_squared = 0.f;
-  int off1 = pos1*SWEEP;
+  double sum = 0.0;
 
-  for(int a=0;a<N;a++) {
-    for(int b=a+1;b<N;b++) {
-      sum_off_diag += creal( Matrices[a*N+b+off1] ) * creal( Matrices[a*N+b+off1] );
-      sum_off_diag += cimag( Matrices[a*N+b+off1] ) * cimag( Matrices[a*N+b+off1] );
-    }
-  }
-
-  for(int a=0;a<N;a++) trace_squared += creal( Matrices[a*N+a+off1] ) * creal( Matrices[a*N+a+off1] );
-
-  return 2*sum_off_diag+trace_squared;
-}
-
-
-double row_norm_squared(REAL complex const *Matrices, int pos1, int pos_row) {
-  double sum = 0.f;
-  int off = pos1*SWEEP + pos_row*N;
-
-  for(int a=0;a<N;a++) {
+  for( size_t a = 0; a < n; ++a )
+  {
     sum += creal( Matrices[off+a] ) * creal( Matrices[off+a] );
     sum += cimag( Matrices[off+a] ) * cimag( Matrices[off+a] );
   }
@@ -637,14 +676,14 @@ double delta_traceD4(
     /**********  PART I  ***********/
     /*******************************/
 
-    sum[0] = tr3_real_ij(Matrices, positionA, positionA, positionA, pos_x, pos_y);
-    sum[1] = tr3_imag_ij(Matrices, positionA, positionA, positionA, pos_x, pos_y);
-    sum[2] = row_norm_squared(Matrices, positionA, pos_x);
-    sum[3] = row_norm_squared(Matrices, positionA, pos_y);
+    sum[0] = tr3_real_ij(Matrices, prop, positionA, positionA, positionA, pos_x, pos_y);
+    sum[1] = tr3_imag_ij(Matrices, prop, positionA, positionA, positionA, pos_x, pos_y);
+    sum[2] = row_norm_squared(Matrices, prop, positionA, pos_x);
+    sum[3] = row_norm_squared(Matrices, prop, positionA, pos_y);
     if( sgnA == 1 )
     {
-      sum[4] = tr2_real_ij(Matrices, positionA, positionA, pos_x, pos_y);
-      sum[5] = tr2_imag_ij(Matrices, positionA, positionA, pos_x, pos_y);
+      sum[4] = tr2_real_ij(Matrices, prop, positionA, positionA, pos_x, pos_y);
+      sum[5] = tr2_imag_ij(Matrices, prop, positionA, positionA, pos_x, pos_y);
     }
     else
     {
@@ -691,18 +730,18 @@ double delta_traceD4(
       const double B_ii = creal( Matrices[ offB + pos_x * n + pos_x ] );
       const double B_jj = creal( Matrices[ offB + pos_y * n + pos_y ] );
 
-      sum[0] = tr3_real_ij( Matrices, positionA, positionB, positionB, pos_x, pos_y );
-      sum[0]+= tr3_real_ij( Matrices, positionB, positionB, positionA, pos_x, pos_y );
-      sum[1] = tr3_imag_ij( Matrices, positionA, positionB, positionB, pos_x, pos_y );
-      sum[1]+= tr3_imag_ij( Matrices, positionB, positionB, positionA, pos_x, pos_y );
-      sum[2] = row_norm_squared( Matrices, positionB, pos_x );
-      sum[3] = row_norm_squared( Matrices, positionB, pos_y );
-      sum[4] = tr3_real_ij( Matrices, positionB, positionA, positionB, pos_x, pos_y );
-      sum[5] = tr3_imag_ij( Matrices, positionB, positionA, positionB, pos_x, pos_y );
+      sum[0] = tr3_real_ij( Matrices, prop, positionA, positionB, positionB, pos_x, pos_y );
+      sum[0]+= tr3_real_ij( Matrices, prop, positionB, positionB, positionA, pos_x, pos_y );
+      sum[1] = tr3_imag_ij( Matrices, prop, positionA, positionB, positionB, pos_x, pos_y );
+      sum[1]+= tr3_imag_ij( Matrices, prop, positionB, positionB, positionA, pos_x, pos_y );
+      sum[2] = row_norm_squared( Matrices, prop, positionB, pos_x );
+      sum[3] = row_norm_squared( Matrices, prop, positionB, pos_y );
+      sum[4] = tr3_real_ij( Matrices, prop, positionB, positionA, positionB, pos_x, pos_y );
+      sum[5] = tr3_imag_ij( Matrices, prop, positionB, positionA, positionB, pos_x, pos_y );
       if(sgnA==1)
       {
-        sum[6] = tr2_real_ij(Matrices, positionB, positionB, pos_x, pos_y);
-        sum[7] = tr2_imag_ij(Matrices, positionB, positionB, pos_x, pos_y);
+        sum[6] = tr2_real_ij(Matrices, prop, positionB, positionB, pos_x, pos_y);
+        sum[7] = tr2_imag_ij(Matrices, prop, positionB, positionB, pos_x, pos_y);
       }
       else
       {
@@ -711,10 +750,10 @@ double delta_traceD4(
       }
       if(sgnB==1)
       {
-        sum[8] = tr2_real_ij(Matrices, positionA, positionB, pos_x, pos_y);
-        sum[8]+= tr2_real_ij(Matrices, positionB, positionA, pos_x, pos_y);
-        sum[9] = tr2_imag_ij(Matrices, positionA, positionB, pos_x, pos_y);
-        sum[9]+= tr2_imag_ij(Matrices, positionB, positionA, pos_x, pos_y);
+        sum[8] = tr2_real_ij(Matrices, prop, positionA, positionB, pos_x, pos_y);
+        sum[8]+= tr2_real_ij(Matrices, prop, positionB, positionA, pos_x, pos_y);
+        sum[9] = tr2_imag_ij(Matrices, prop, positionA, positionB, pos_x, pos_y);
+        sum[9]+= tr2_imag_ij(Matrices, prop, positionB, positionA, pos_x, pos_y);
       }
       else
       {
@@ -788,40 +827,40 @@ double delta_traceD4(
       double trF4 = 0.0;
       if( sgnB == 1 )
       {
-        trF2 = a*tr2_real_ij( Matrices, positionC, positionD, pos_x, pos_y );
-        trF2+= a*tr2_real_ij( Matrices, positionD, positionC, pos_x, pos_y );
-        trF2+= b*tr2_imag_ij( Matrices, positionC, positionD, pos_x, pos_y );
-        trF2+= b*tr2_imag_ij( Matrices, positionD, positionC, pos_x, pos_y );
+        trF2 = a*tr2_real_ij( Matrices, prop, positionC, positionD, pos_x, pos_y );
+        trF2+= a*tr2_real_ij( Matrices, prop, positionD, positionC, pos_x, pos_y );
+        trF2+= b*tr2_imag_ij( Matrices, prop, positionC, positionD, pos_x, pos_y );
+        trF2+= b*tr2_imag_ij( Matrices, prop, positionD, positionC, pos_x, pos_y );
       }
       if( sgnC == 1 )
       {
-        trF3 = a*tr2_real_ij( Matrices, positionB, positionD, pos_x, pos_y );
-        trF3+= a*tr2_real_ij( Matrices, positionD, positionB, pos_x, pos_y );
-        trF3+= b*tr2_imag_ij( Matrices, positionB, positionD, pos_x, pos_y );
-        trF3+= b*tr2_imag_ij( Matrices, positionD, positionB, pos_x, pos_y );
+        trF3 = a*tr2_real_ij( Matrices, prop, positionB, positionD, pos_x, pos_y );
+        trF3+= a*tr2_real_ij( Matrices, prop, positionD, positionB, pos_x, pos_y );
+        trF3+= b*tr2_imag_ij( Matrices, prop, positionB, positionD, pos_x, pos_y );
+        trF3+= b*tr2_imag_ij( Matrices, prop, positionD, positionB, pos_x, pos_y );
       }
       if( sgnD == 1 )
       {
-        trF4 = a*tr2_real_ij( Matrices, positionB, positionC, pos_x, pos_y );
-        trF4+= a*tr2_real_ij( Matrices, positionC, positionB, pos_x, pos_y );
-        trF4+= b*tr2_imag_ij( Matrices, positionB, positionC, pos_x, pos_y );
-        trF4+= b*tr2_imag_ij( Matrices, positionC, positionB, pos_x, pos_y );
+        trF4 = a*tr2_real_ij( Matrices, prop, positionB, positionC, pos_x, pos_y );
+        trF4+= a*tr2_real_ij( Matrices, prop, positionC, positionB, pos_x, pos_y );
+        trF4+= b*tr2_imag_ij( Matrices, prop, positionB, positionC, pos_x, pos_y );
+        trF4+= b*tr2_imag_ij( Matrices, prop, positionC, positionB, pos_x, pos_y );
       }
 
       /* Traces over four matrices: */
-      double trAE = ( b1 + d2 ) * a * tr3_real_ij( Matrices, positionB, positionC, positionD, pos_x, pos_y );
-             trAE+= ( b1 + d2 ) * a * tr3_real_ij( Matrices, positionD, positionC, positionB, pos_x, pos_y );
-             trAE+= ( b2 + c2 ) * a * tr3_real_ij( Matrices, positionB, positionD, positionC, pos_x, pos_y );
-             trAE+= ( b2 + c2 ) * a * tr3_real_ij( Matrices, positionC, positionD, positionB, pos_x, pos_y );
-             trAE+= ( c1 + d1 ) * a * tr3_real_ij( Matrices, positionC, positionB, positionD, pos_x, pos_y );
-             trAE+= ( c1 + d1 ) * a * tr3_real_ij( Matrices, positionD, positionB, positionC, pos_x, pos_y );
+      double trAE = ( b1 + d2 ) * a * tr3_real_ij( Matrices, prop, positionB, positionC, positionD, pos_x, pos_y );
+             trAE+= ( b1 + d2 ) * a * tr3_real_ij( Matrices, prop, positionD, positionC, positionB, pos_x, pos_y );
+             trAE+= ( b2 + c2 ) * a * tr3_real_ij( Matrices, prop, positionB, positionD, positionC, pos_x, pos_y );
+             trAE+= ( b2 + c2 ) * a * tr3_real_ij( Matrices, prop, positionC, positionD, positionB, pos_x, pos_y );
+             trAE+= ( c1 + d1 ) * a * tr3_real_ij( Matrices, prop, positionC, positionB, positionD, pos_x, pos_y );
+             trAE+= ( c1 + d1 ) * a * tr3_real_ij( Matrices, prop, positionD, positionB, positionC, pos_x, pos_y );
 
-             trAE+= ( b1 + d2 ) * b * tr3_imag_ij( Matrices, positionB, positionC, positionD, pos_x, pos_y );
-             trAE+= ( b1 + d2 ) * b * tr3_imag_ij( Matrices, positionD, positionC, positionB, pos_x, pos_y );
-             trAE+= ( b2 + c2 ) * b * tr3_imag_ij( Matrices, positionB, positionD, positionC, pos_x, pos_y );
-             trAE+= ( b2 + c2 ) * b * tr3_imag_ij( Matrices, positionC, positionD, positionB, pos_x, pos_y );
-             trAE+= ( c1 + d1 ) * b * tr3_imag_ij( Matrices, positionC, positionB, positionD, pos_x, pos_y );
-             trAE+= ( c1 + d1 ) * b * tr3_imag_ij( Matrices, positionD, positionB, positionC, pos_x, pos_y );
+             trAE+= ( b1 + d2 ) * b * tr3_imag_ij( Matrices, prop, positionB, positionC, positionD, pos_x, pos_y );
+             trAE+= ( b1 + d2 ) * b * tr3_imag_ij( Matrices, prop, positionD, positionC, positionB, pos_x, pos_y );
+             trAE+= ( b2 + c2 ) * b * tr3_imag_ij( Matrices, prop, positionB, positionD, positionC, pos_x, pos_y );
+             trAE+= ( b2 + c2 ) * b * tr3_imag_ij( Matrices, prop, positionC, positionD, positionB, pos_x, pos_y );
+             trAE+= ( c1 + d1 ) * b * tr3_imag_ij( Matrices, prop, positionC, positionB, positionD, pos_x, pos_y );
+             trAE+= ( c1 + d1 ) * b * tr3_imag_ij( Matrices, prop, positionD, positionB, positionC, pos_x, pos_y );
 
       delta3 += ( n * trAE + s * ( trB * trF2 + trC * trF3 + trD * trF4 ) +
                   2.0 * s * ( sgnA * sgnB * trABtrCD + sgnA * sgnC * trACtrBD + sgnA * sgnD * trADtrBC ) );
@@ -842,8 +881,8 @@ double delta_traceD4(
     /**********  PART I  ***********/
     /*******************************/
 
-    sum[0] = row_norm_squared(Matrices, positionA, pos_x);
-    sum[1] = tr3_real_ij(Matrices, positionA, positionA, positionA, pos_x, pos_x);
+    sum[0] = row_norm_squared(Matrices, prop, positionA, pos_x);
+    sum[1] = tr3_real_ij(Matrices, prop, positionA, positionA, positionA, pos_x, pos_x);
     if( sgnA == 1 )
     {
       sum[2] = tr3(Matrices, num_h, num_l, n, positionA, positionA, positionA);
@@ -894,10 +933,10 @@ double delta_traceD4(
 
       const double c_B = creal( Matrices[pos_upper+offB] );
 
-      sum[0] = tr3_real_ij(Matrices, positionA, positionB, positionB, pos_x, pos_x);
-      sum[1] = row_norm_squared(Matrices, positionB, pos_x);
-      sum[2] = tr3_real_ij(Matrices, positionB, positionA, positionB, pos_x, pos_x);
-      sum[3] = tr2_real_ij(Matrices, positionA, positionB, pos_x, pos_x);
+      sum[0] = tr3_real_ij(Matrices, prop, positionA, positionB, positionB, pos_x, pos_x);
+      sum[1] = row_norm_squared(Matrices, prop, positionB, pos_x);
+      sum[2] = tr3_real_ij(Matrices, prop, positionB, positionA, positionB, pos_x, pos_x);
+      sum[3] = tr2_real_ij(Matrices, prop, positionA, positionB, pos_x, pos_x);
 
       const double part_IIa = 2.0 * a * sum[0] - a * a * sum[1];
       const double part_IIb = 2.0 * a * sum[2] - a * a * c_B * c_B;
@@ -973,21 +1012,21 @@ double delta_traceD4(
       }
       if( sgnB == 1 )
       {
-        trF2 = tr2_real_ij(Matrices, positionC, positionD, pos_x, pos_x);
+        trF2 = tr2_real_ij(Matrices, prop, positionC, positionD, pos_x, pos_x);
       }
       if( sgnC == 1 )
       {
-        trF3 = tr2_real_ij(Matrices, positionB, positionD, pos_x, pos_x);
+        trF3 = tr2_real_ij(Matrices, prop, positionB, positionD, pos_x, pos_x);
       }
       if( sgnD == 1 )
       {
-        trF4 = tr2_real_ij(Matrices, positionB, positionC, pos_x, pos_x);
+        trF4 = tr2_real_ij(Matrices, prop, positionB, positionC, pos_x, pos_x);
       }
 
       /* Traces over four matrices: */
-      double trAE = (b1+d2)*tr3_real_ij(Matrices, positionB, positionC, positionD, pos_x, pos_x);
-      trAE+= (b2+c2)*tr3_real_ij(Matrices, positionB, positionD, positionC, pos_x, pos_x);
-      trAE+= (c1+d1)*tr3_real_ij(Matrices, positionC, positionB, positionD, pos_x, pos_x);
+      double trAE = ( b1 + d2 ) * tr3_real_ij(Matrices, prop, positionB, positionC, positionD, pos_x, pos_x);
+      trAE+= ( b2 + c2 ) * tr3_real_ij(Matrices, prop, positionB, positionD, positionC, pos_x, pos_x);
+      trAE+= ( c1 + d1 ) * tr3_real_ij(Matrices, prop, positionC, positionB, positionD, pos_x, pos_x);
 
       delta3 += a * ( n*trAE + trF1 + s*(trB*trF2 + trC*trF3 + trD*trF4) +
                       s*(sgnA*sgnB*trABtrCD + sgnA*sgnC*trACtrBD + sgnA*sgnD*trADtrBC) );

@@ -1,6 +1,7 @@
 #ifndef _UTILITIES_H_
 #define _UTILITIES_H_
 
+#include "Precision.h"
 #define EPSILON 1E-2
 
 double cclock();
