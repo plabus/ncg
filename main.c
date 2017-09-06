@@ -49,9 +49,6 @@ int main()
   // int nproc = 0;
 
   // Initialise parameters
-  // TODO: This needs NUM_H and NUM_L to be set, so Generate_Clifford_Odd_Group
-  // need to have been called by now (otherwise we loose const-ness).
-  // Can this be improved?
   struct Matrix_Properties parameters = {
     .n = N,
     .p = P,
@@ -66,8 +63,9 @@ int main()
     .g4 = G4
   };
 
-  // Generate the ODD Clifford Group and number of (anti-)hermitian matrices
-  // Hermitian Matrices are stored first, anti-hermitian matrices second
+  // Generate the ODD Clifford Group and number of (anti-)hermitian matrices,
+  // where hermitian matrices are stored first, anti-hermitian matrices second.
+  // Update the struct parameters during the process (num_h, num_l and num_m).
   size_t const size_gammas = (int) pow( 2, parameters.d - 1 ) * parameters.k * parameters.k;
   float complex *Gamma_Matrices = (float complex *) malloc( size_gammas * sizeof(float complex) );
   Generate_Clifford_Odd_Group(Gamma_Matrices, &parameters);

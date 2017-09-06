@@ -1,20 +1,14 @@
 TODO:
 -----
 
-Configuration I/O:
+write out configurations:
+-- need to save:
+    N, P, Q, g2, g4, #conf
 -- restart
 -- special file format?
 -- EVs within configs?
--- need to save:
-    N, P, Q, start(H/C)/restart, RNG state, g2, g4
-
-Always write out action with config
-
-struct for clifford stuff (shall this be integrated into Matrix_Properties??)
 
 One struct for all matrices including data (3d array) and parameters (incl. Clifford) ???
-
-Guarantee trace condition for L_TYPE when contructing new candiate
 
 Fixed RNG seed
 
@@ -26,20 +20,23 @@ Dirac stencil & Arnoldi
 PROGRESSING:
 ------------
 
-Calculate action for Tr D^4 when initalising & Testing S against deltaS for g4 != 0
+Guarantee trace condition for L_TYPE when contructing new candiate
 
 One binary only:
 -- parameter read in
    (a) command line args
    (b) ini files
--- what to pass?
--- need
-    write out frequency, step size
+-- what to pass? --> n, p, q, g2, g4, chain_length, write_out_freq
 
 
 DONE:
 -----
 
+Calculate action for full S = Tr D^4 when initalising/write out
+ & Testing S against deltaS for g4 != 0 (done+correct)
+ NOTE: cannot accumulate deltaS to some global variable action due to rounding errors!
+Always write out action with config
+struct for clifford stuff (integrated into Matrix_Properties)
 Just chain generation w/o MKL
 Autotune acceptance rate
 Hot start in range / NO max element
