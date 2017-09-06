@@ -96,20 +96,36 @@ void combination(int* c,int n,int p, int x){
   c[p-1] = c[p-2] + x - k;
 }
 
-void Count_Hs_and_Ls(int p, int q, int *seq, int n, int *num_h, int *num_l) {
-  /* Assume n>=1 */
-  int exp;
+void Count_Hs_and_Ls(
+    size_t p,
+    size_t q,
+    int *seq,
+    size_t n,
+    size_t *num_h,
+    size_t *num_l
+    )
+{
+  // Assume n > 0
 
-  if(n==1) {
-    if(seq[0]<=p) *num_h += 1;
-    else          *num_l += 1;
+  if( n == 1 )
+  {
+    if( seq[0] <= p ) *num_h += 1;
+    else              *num_l += 1;
   }
-  else {
-    exp = (n-1)*n/2;
-    for(int i=0;i<n;++i) if(seq[i]>p) exp++;
+  else
+  {
+    size_t exp = ( n - 1 ) * n / 2;
 
-    if(exp%2==0) *num_h += 1;
-    else         *num_l += 1;
+    for( size_t i = 0; i < n; ++i )
+    {
+      if( seq[i] > p )
+      {
+        exp++;
+      }
+    }
+
+    if( exp % 2 == 0 ) *num_h += 1;
+    else               *num_l += 1;
   }
 
 }
@@ -204,7 +220,11 @@ void antisymmetrise(float complex *gammas, int dim, int k, int num_indices, int 
 
 }
 
-void Generate_Gammas(int p, int q, float complex *gammas) {
+void Generate_Gammas(
+    float complex *gammas,
+    struct Matrix_Properties const prop
+    )
+{
   /* We generate gamma matrices for the case (p+q,0) first *
    * and in the end multiply the last q matrices with i.   */
 
@@ -222,48 +242,59 @@ void Generate_Gammas(int p, int q, float complex *gammas) {
    * where gamma_mu are the matrices in d = dim-1  *
    *                                               */
 
-  int dim = p+q;
-  int s = (8*8*8-dim)%8;
-  int k = (dim%2==0) ? (int)pow(2,dim/2) : (int)pow(2,(dim-1)/2);
-  int size = dim*k*k; /* space for all gamma matrices */
-  int small_k = k/2; /* for dimensional recursion */
-  int small_size = (dim-2)*small_k*small_k;
+  size_t const p = prop.p;
+  size_t const s = prop.s;
+  size_t const k = prop.k;
+  size_t const dim = prop.d;
 
-  int offset, offset2;
+  size_t const size = dim * k * k; // space for all gamma matrices
+  size_t const small_k = k / 2; // for dimensional recursion
+  size_t const small_size = (dim-2) * small_k * small_k;
 
   /* PAULI MATRICES */
-  float complex sigma1[4] = {0,1,1,0};
-  float complex sigma2[4] = {0,-I,I,0};
-  float complex sigma3[4] = {1,0,0,-1};
+  float complex const sigma1[4] = {0,1,1,0};
+  float complex const sigma2[4] = {0,-I,I,0};
+  float complex const sigma3[4] = {1,0,0,-1};
 
   /* Initialising the gamma matrices recursively for type (d,0) */
-  if(dim==1) {
+  if( dim == 1 )
+  {
     gammas[0] = 1;
   }
-  else if(dim==2) {
-    for(int i=0;i<k*k;++i) {
+  else if( dim == 2 )
+  {
+    for( size_t i = 0; i < k * k; ++i )
+    {
       gammas[i] = sigma1[i];
       gammas[i+k*k] = sigma2[i];
     }
   }
 
-  /* The EVEN DIMENSIONAL case */
-  else if(dim>2 && dim%2==0) {
-    /* Allocate memory for the (d-2) dimensional matrices */
+  // The EVEN DIMENSIONAL case
+  else if( dim > 2 && dim % 2 == 0 )
+  {
+    // Allocate memory for the (d-2) dimensional matrices
     float complex *small_gammas = (float complex*) calloc(small_size,sizeof(float complex));
 
-    /* First generate the gamma matrices for dim-2 */
-    Generate_Gammas(dim-2, 0, small_gammas);
+    // First generate the gamma matrices for dim-2
+    struct Matrix_Properties new_prop = prop;
+    new_prop.p = dim - 2;
+    new_prop.q = 0;
+    new_prop.d = new_prop.p + new_prop.q;
+    new_prop.s = ( new_prop.q - new_prop.p + 64 ) % 8;
+    new_prop.k = (int) pow( 2, ( new_prop.p + new_prop.q ) / 2 );
+    Generate_Gammas(small_gammas, new_prop);
 
-    /* gamma_mu (x) sigma1 */
+    // gamma_mu (x) sigma1
     for(int n=0;n<dim-2;++n) { /* Loop over matrices */
-      offset = n * small_k * small_k; /* From one small matrix to the next */
-      offset2 = n * k * k; /* Offset big matrices */
+      size_t const offset = n * small_k * small_k; /* From one small matrix to the next */
+      size_t const offset2 = n * k * k; /* Offset big matrices */
       for(int i=0;i<small_k;++i) { /* Indices gamma matrices */
         for(int j=0;j<small_k;++j) {
           for(int ii=0;ii<2;++ii) { /* Indices sigma1 */
             for(int jj=0;jj<2;++jj) {
-              gammas[i*4*small_k+2*j+(ii*2*small_k+jj)+offset2] = small_gammas[i*small_k+j+offset] * sigma1[ii*2+jj];
+              gammas[i*4*small_k+2*j+(ii*2*small_k+jj)+offset2] =
+                small_gammas[i*small_k+j+offset] * sigma1[ii*2+jj];
             }
           }
         }
@@ -289,17 +320,23 @@ void Generate_Gammas(int p, int q, float complex *gammas) {
   }
 
   /* The ODD DIMENSONAL case */
-  else {
-
-    /* First generate the gamma matrices for dim-1 *
-     * which is even dimensional                   */
-    Generate_Gammas(dim-1, 0, gammas);
+  else
+  {
+    // First generate the gamma matrices for dim-1
+    // which is even dimensional
+    struct Matrix_Properties new_prop = prop;
+    new_prop.p = dim - 1;
+    new_prop.q = 0;
+    new_prop.d = new_prop.p + new_prop.q;
+    new_prop.s = ( new_prop.q - new_prop.p + 64 ) % 8;
+    new_prop.k = (int) pow( 2, ( new_prop.p + new_prop.q - 1 ) / 2 );
+    Generate_Gammas(gammas, new_prop);
 
     /* Buffer for matrix multiplication */
     float complex *buffer = (float complex*) calloc(k*k,sizeof(float complex));
 
     /* Add g_5 to the end of the array */
-    offset = (dim-1)*k*k;
+    size_t const offset = (dim-1)*k*k;
 
     /* Multiply gamma1 with gamma2 and save in buffer */
     for(int a=0;a<k;++a) {
@@ -347,135 +384,182 @@ void Generate_Gammas(int p, int q, float complex *gammas) {
     gammas[i] = I * gammas[i];
 }
 
-void Reshuffle_Clifford_Group(int p, int q, float complex *big_gammas, int num_h, int num_l, int ODD) {
+void Reshuffle_Clifford_Group(
+    float complex *big_gammas,
+    struct Matrix_Properties const prop,
+    size_t const ODD
+    )
+{
   /* Order the big gammas in such a way, that the hermitian matrices come first */
+  size_t const k = prop.k;
+  size_t const dim = prop.d;
+  size_t const num_h = prop.num_h;
 
-  int dim = p+q;
-  int k = (dim%2==0) ? (int)pow(2,dim/2) : (int)pow(2,(dim-1)/2);
-  int num = (int)pow(2,dim);
-  if(ODD==1) num = (int)pow(2,dim-1);
-  float complex first;
+  size_t num = (size_t) pow(2,dim);
+  if(ODD==1) num = (size_t) pow(2,dim-1);
 
   float complex *buffer = (float complex*) malloc(num*k*k*sizeof(float complex));
 
-  int off1 = 0, off2 = num_h*k*k;
+  size_t off1 = 0;
+  size_t off2 = num_h * k * k;
 
-  for(int n=0;n<num;++n) {
-    /* Claculate the first element of the gamma matrix squared */
-    first = 0;
-    for(int i=0;i<k;++i) {
+  for( size_t n = 0; n < num; ++n )
+  {
+    /* Calculate the first element of the gamma matrix squared */
+    double complex first = 0.0;
+    for( size_t i = 0; i < k; ++i )
+    {
       first += big_gammas[i+n*k*k] * big_gammas[i*k+n*k*k];
     }
     /* If it squares to 1, copy it to the beginning of the buffer */
-    if(fabs(creal(first)-1)<1e-5) {
-      for(int i=0;i<k*k;++i) buffer[i+off1] = big_gammas[i+n*k*k];
-      off1 += k*k;
+    if( fabs( creal(first) - 1.0 ) < 1e-5 )
+    {
+      for( size_t i = 0; i < k * k; ++i )
+      {
+        buffer[i+off1] = big_gammas[i+n*k*k];
+      }
+      off1 += k * k;
     }
     /* If it squares to -1 it's anti-hermitian */
-    else if(fabs(creal(first)+1)<1e-5) {
-      for(int i=0;i<k*k;++i) buffer[i+off2] = big_gammas[i+n*k*k];
-      off2 += k*k;
+    else if( fabs( creal(first) + 1.0 ) < 1e-5 )
+    {
+      for( size_t i = 0; i < k * k; ++i )
+      {
+        buffer[i+off2] = big_gammas[i+n*k*k];
+      }
+      off2 += k * k;
     }
   }
 
   /* Copy the whole buffer back to big_gammas */
-      for(int i=0;i<num*k*k;++i) big_gammas[i] = buffer[i];
+  for( size_t i=0; i < num * k * k; ++i )
+  {
+    big_gammas[i] = buffer[i];
+  }
 
   free(buffer);
-
 }
 
-void Generate_Clifford_Group(int p, int q, float complex *big_gammas, int *num_h, int *num_l) {
+void Generate_Clifford_Group(
+    float complex *big_gammas,
+    struct Matrix_Properties* prop
+    )
+{
+  size_t const   p = prop->p;
+  size_t const   q = prop->q;
+  size_t const   k = prop->k;
+  size_t const dim = prop->d;
 
-  int dim = p+q;
-  int k = (dim%2==0) ? (int)pow(2,dim/2) : (int)pow(2,(dim-1)/2);
-  int num_mat; /* Number of gammas with fixed number of indices */
-  int offset = k*k; /* Offset to iterate over big gammas */
-
-  /* Initialise number of (anit-)hermitian matrices to zero */
-  *num_h = 1; /* The unity matrix 1I is hermitian */
+  // Initialise number of (anit-)hermitian matrices to zero
+  size_t* num_h = (size_t *) malloc( sizeof(size_t) );
+  size_t* num_l = (size_t *) malloc( sizeof(size_t) );
+  *num_h = 1; // The unity matrix 1I is hermitian
   *num_l = 0;
 
-  /* Allocate space for a k*k buffer matrix */
-  float complex *matrix = (float complex*) calloc(k*k,sizeof(float complex));
-  /* Allocate space for index sequence */
-  int *sequence = (int*) malloc(dim*sizeof(int));
-  /* Allocate space for gamma matrices and generate them */
-  int size_gammas = dim*k*k; /* space for all gamma matrices */
-  float complex *gammas = (float complex*) calloc(size_gammas,sizeof(float complex));
-  Generate_Gammas(p,q,gammas);
+  // Allocate space for a gamma matrix buffer and index sequence,
+  // allocate space for all gamma matrices and generate them
+  float complex *matrix = (float complex *) calloc( k * k, sizeof(float complex) );
+  float complex *gammas = (float complex *) calloc( dim * k * k, sizeof(float complex) );
+  int *sequence = (int *) calloc( dim, sizeof(int) );
+  Generate_Gammas(gammas, *prop);
 
-  /* Now generate (anti-symmetric) products of 0 up to d
-   * gamma matrices:
-   * Gamma_M = {1I, gamma_mu, gamma_mu,nu, ..., gamma_5} */
+  // Now generate (anti-symmetric) products of 0 up to d
+  // gamma matrices:
+  // Gamma_M = {1I, gamma_mu, gamma_mu,nu, ..., gamma_5}
 
-  /* Write the unit matrix 1I first */
-  for(int i=0;i<k;++i) big_gammas[i*k+i] = 1;
+  // Write the unit matrix 1I first
+  for( size_t i = 0; i < k; ++i )
+  {
+    big_gammas[i*k+i] = 1.0;
+  }
 
-  for(int n=1;n<=dim;++n) { /* Number of indices in the gammas */
-    num_mat = binomial(dim, n); /* Calculate number of matrices with fixed number of indices */
-    for(int m=0;m<num_mat;++m) { /* Iterations over gammas with fixed number of indices */
+  size_t offset = k * k; // Offset to iterate over big gammas
+
+  // Iterate over the number of indices in the gamma matrices
+  for( size_t n = 1; n <= dim; ++n )
+  {
+    // Calculate the number of matrices for a given number of indices (n)
+    size_t const num_mat = binomial(dim, n);
+
+    // Iterate over gammas with fixed number of indices
+    for( size_t m = 0; m < num_mat; ++m )
+    {
       combination(sequence, dim, n, m+1);
       Count_Hs_and_Ls(p, q, sequence, n, num_h, num_l);
       antisymmetrise(gammas, dim, k, n, sequence, matrix);
-      for(int i=0;i<k*k;++i) {
+      for( size_t i = 0; i < k * k; ++i )
+      {
         big_gammas[i+offset] = matrix[i];
       }
-      offset += k*k;
+      offset += k * k;
     }
   }
 
-  Reshuffle_Clifford_Group(p, q, big_gammas, *num_h, *num_l, 0);
+  prop->num_h = *num_h;
+  prop->num_l = *num_l;
+  Reshuffle_Clifford_Group(big_gammas, *prop, 0);
 
   free(matrix);
   free(sequence);
   free(gammas);
-
 }
 
-void Generate_Clifford_Odd_Group(int p, int q, float complex *big_gammas, int *num_h, int *num_l) {
-
-  int dim = p+q;
-  int k = (dim%2==0) ? (int)pow(2,dim/2) : (int)pow(2,(dim-1)/2);
-  int num_mat; /* Number of gammas with fixed number of indices */
-  int offset = 0; /* Offset to iterate over big gammas */
+void Generate_Clifford_Odd_Group(
+    float complex *big_gammas,
+    struct Matrix_Properties* prop
+    )
+{
+  size_t const p   = prop->p;
+  size_t const q   = prop->q;
+  size_t const k   = prop->k;
+  size_t const dim = prop->d;
 
   /* Initialise number of (anit-)hermitian matrices to zero */
+  size_t* num_h = (size_t *) malloc( sizeof(size_t) );
+  size_t* num_l = (size_t *) malloc( sizeof(size_t) );
   *num_h = 0;
   *num_l = 0;
 
-  /* (1) Allocate space for a k*k buffer matrix */
-  /* (2) Allocate space for index sequence */
-  /* (3) Allocate space for gamma matrices and generate them */
-  float complex *matrix = (float complex*) calloc(k*k,sizeof(float complex));
-  int *sequence = (int*) malloc(dim*sizeof(int));
-  int size_gammas = dim*k*k; /* space for all gamma matrices */
-  float complex *gammas = (float complex*) calloc(size_gammas,sizeof(float complex));
-  Generate_Gammas(p,q,gammas);
+  // Allocate space for a gamma matrix buffer and index sequence,
+  // allocate space for all gamma matrices and generate them
+  float complex *matrix = (float complex *) calloc( k * k, sizeof(float complex) );
+  float complex *gammas = (float complex *) calloc( dim * k * k, sizeof(float complex) );
+  int *sequence = (int *) calloc( dim, sizeof(int) );
+  Generate_Gammas(gammas, *prop);
 
-  /* Now generate odd products gamma matrices:
-   * Gamma_Odd__M = {gamma_mu, gamma_mu_nu_rho, ...} */
+  // Now generate odd products gamma matrices:
+  // Gamma_Odd__M = {gamma_mu, gamma_mu_nu_rho, ...}
 
-  for(int n=1;n<=dim;n+=2) { /* Number of indices in the gammas (odd) */
-    num_mat = binomial(dim, n); /* Calculate number of matrices with fixed number of indices */
-    for(int m=0;m<num_mat;++m) { /* Iterations over gammas with fixed number of indices */
+  size_t offset = 0; // Offset to iterate over big gammas
+
+  // Iterate over the number of indices in the gamma matrices
+  for( size_t n = 1; n <= dim; n += 2 )
+  {
+    // Calculate the number of matrices for a given number of indices (n)
+    size_t const num_mat = binomial(dim, n);
+
+    // Iterate over gammas with fixed number of indices
+    for( size_t m = 0; m < num_mat; ++m )
+    {
       combination(sequence, dim, n, m+1);
       Count_Hs_and_Ls(p, q, sequence, n, num_h, num_l);
       antisymmetrise(gammas, dim, k, n, sequence, matrix);
-      for(int i=0;i<k*k;++i) {
+      for( size_t i = 0; i < k * k; ++i )
+      {
         big_gammas[i+offset] = matrix[i];
       }
-      offset += k*k;
+      offset += k * k;
     }
   }
 
-  /* Reshuffle the indices to have all hermitian matrices first */
-  Reshuffle_Clifford_Group(p, q, big_gammas, *num_h, *num_l, 1);
+  // Reshuffle the indices to have all hermitian matrices first
+  prop->num_h = *num_h;
+  prop->num_l = *num_l;
+  Reshuffle_Clifford_Group(big_gammas, *prop, 1);
 
   free(matrix);
   free(sequence);
   free(gammas);
-
 }
 
 void Calculate_Trace_Gamma_ABAB(
@@ -517,11 +601,11 @@ void Calculate_Trace_Gamma_ABAB(
 
 int calculate_sigmaABCD(
     float complex const *Gamma_Matrices,
+    struct Matrix_Properties const prop,
     size_t const a,
     size_t const b,
     size_t const c,
-    size_t const d,
-    struct Matrix_Properties const prop
+    size_t const d
     )
 {
   size_t const num_h = prop.num_h;
@@ -577,16 +661,16 @@ void Calculate_Trace_Gamma_ABCD(
            * pairs of (tracefree) non-tracefree matrices <=> sgn = -1.        */
           int const total_sign = (a<num_h?1:-1)*(b<num_h?1:-1)*(c<num_h?1:-1)*(d<num_h?1:-1);
           if( total_sign == -1 ) continue;
-          int const comb1 = calculate_sigmaABCD(Gamma_Matrices, a, b, c, d, prop);
+          int const comb1 = calculate_sigmaABCD(Gamma_Matrices, prop, a, b, c, d);
 
           /* SET VALUES IF THERE ARE NON-ZERO */
           if( comb1 != 0 )
           {
-            int const comb2 = calculate_sigmaABCD(Gamma_Matrices, a, b, d, c, prop);
-            int const comb3 = calculate_sigmaABCD(Gamma_Matrices, a, c, b, d, prop);
-            int const comb4 = calculate_sigmaABCD(Gamma_Matrices, a, c, d, b, prop);
-            int const comb5 = calculate_sigmaABCD(Gamma_Matrices, a, d, b, c, prop);
-            int const comb6 = calculate_sigmaABCD(Gamma_Matrices, a, d, c, b, prop);
+            int const comb2 = calculate_sigmaABCD(Gamma_Matrices, prop, a, b, d, c);
+            int const comb3 = calculate_sigmaABCD(Gamma_Matrices, prop, a, c, b, d);
+            int const comb4 = calculate_sigmaABCD(Gamma_Matrices, prop, a, c, d, b);
+            int const comb5 = calculate_sigmaABCD(Gamma_Matrices, prop, a, d, b, c);
+            int const comb6 = calculate_sigmaABCD(Gamma_Matrices, prop, a, d, c, b);
 
             /* write to sigma with the following data layout:               *
              * sigmaABCD[A][] = {#, B, C, D, b1, b2, c1, c2, d1, d2, ... }  */

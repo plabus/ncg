@@ -15,13 +15,36 @@ void combination(int* c,int n,int p, int x);
 
 void commutator(float complex *A, float complex *B, float complex *C, int k);
 void antisymmetrise(float complex *gammas, int dim, int k, int num_indices, int *sequence, float complex *matrix);
-void Count_Hs_and_Ls(int p, int q, int *seq, int n, int *num_h, int *num_l);
+void Count_Hs_and_Ls(
+    size_t p,
+    size_t q,
+    int *seq,
+    size_t n,
+    size_t *num_h,
+    size_t *num_l
+    );
 
 
-void Generate_Gammas(int p, int q, float complex *gammas);
-void Reshuffle_Clifford_Group(int p, int q, float complex *big_gammas, int num_h, int num_l, int ODD);
-void Generate_Clifford_Group(int p, int q, float complex *big_gammas, int *num_h, int *num_l);
-void Generate_Clifford_Odd_Group(int p, int q, float complex *big_gammas, int *num_h, int *num_l);
+void Generate_Gammas(
+    float complex *gammas,
+    struct Matrix_Properties const prop
+    );
+
+void Reshuffle_Clifford_Group(
+    float complex *big_gammas,
+    struct Matrix_Properties const prop,
+    size_t const ODD
+    );
+
+void Generate_Clifford_Group(
+    float complex *big_gammas,
+    struct Matrix_Properties* prop
+    );
+
+void Generate_Clifford_Odd_Group(
+    float complex *big_gammas,
+    struct Matrix_Properties* prop
+    );
 
 void Calculate_Trace_Gamma_ABAB(
     float complex const *Gamma_Matrices,
@@ -31,11 +54,11 @@ void Calculate_Trace_Gamma_ABAB(
 
 int calculate_sigmaABCD(
     float complex const *Gamma_Matrices,
+    struct Matrix_Properties const prop,
     size_t const a,
     size_t const b,
     size_t const c,
-    size_t const d,
-    struct Matrix_Properties const prop
+    size_t const d
     );
 
 void Calculate_Trace_Gamma_ABCD(

@@ -47,8 +47,6 @@ int main()
   int start_sweep = 0;
   int rank = 0;
   // int nproc = 0;
-  int NUM_H = 0;
-  int NUM_L = 0;
 
   // Initialise parameters
   // TODO: This needs NUM_H and NUM_L to be set, so Generate_Clifford_Odd_Group
@@ -60,9 +58,9 @@ int main()
     .q = Q,
     .d = P + Q,
     .s = ( Q - P + 64 ) % 8,
-    .k = (P+Q) % 2 ? (int) pow( 2, ((P+Q)-1)/2 ) : (int) pow( 2, (P+Q)/2 ),
-    .num_h = NUM_H,
-    .num_l = NUM_L,
+    .k = (P+Q) % 2 ? (int) pow( 2, ( P + Q - 1 ) / 2 ) : (int) pow( 2, ( P + Q ) / 2 ),
+    .num_h = 0,
+    .num_l = 0,
     .g2 = G2,
     .g4 = G4
   };
@@ -71,9 +69,7 @@ int main()
   // Hermitian Matrices are stored first, anti-hermitian matrices second
   size_t const size_gammas = (int) pow( 2, parameters.d - 1 ) * parameters.k * parameters.k;
   float complex *Gamma_Matrices = (float complex *) malloc( size_gammas * sizeof(float complex) );
-  Generate_Clifford_Odd_Group(parameters.p, parameters.q, Gamma_Matrices, &NUM_H, &NUM_L);
-  parameters.num_h = NUM_H;
-  parameters.num_l = NUM_L;
+  Generate_Clifford_Odd_Group(Gamma_Matrices, &parameters);
   size_t const num_m = parameters.num_h + parameters.num_l;
 
   // Allocate matrix SigmaAB and calulate its values from the Gammas
