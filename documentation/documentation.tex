@@ -119,7 +119,7 @@ and non-vanishing terms with traces of four different matrices will
 always have $\sigma_{ABCD} = \pm 1$.
 
 Let us now denote the part of the action composed out of terms with traces
-involving at \textit{least} one fixed matrix (say $A$) with $S(A)$.
+involving at \textit{least} one fixed matrix (say $A$) with $S[A]$.
 Then combining the previous results one gets
 \begin{align}
   &S[A] =
@@ -154,19 +154,18 @@ Then combining the previous results one gets
   \sum_{\mathclap{\substack{B < C < D\\A \not \in \{B,C,D\} }}}
   \;\;
   \bigg[
-    N \Tr A E +
-    \Tr A \Tr F_1 +
-    \Tr H_B \Tr F_2 +
-    \Tr H_C \Tr F_3
+    N \, \Tr \big( A E \big) +
+    \Tr \big( A \big) \Tr \big ( F_1 \big) +
+    \Tr \big( B \big) \Tr \big ( F_2 \big) +
+    \Tr \big( C \big) \Tr \big ( F_3 \big) +
+    \Tr \big( D \big) \Tr \big ( F_4 \big)
     \nonumber \\
     &\quad+
-    \Tr H_D \Tr F_4 +
-    s \bigg(
-      (-)^{A+H_B} \Tr A \ptwid H_B \Tr \ptwid H_C \ptwid H_D
-      \nonumber \\
-      &\quad+     (-)^{A+H_C} \Tr A \ptwid H_C \Tr \ptwid H_B \ptwid H_D +
-      (-)^{A+H_D} \Tr A \ptwid H_D \Tr \ptwid H_B \ptwid H_C
-    \bigg)
+    s \Big(
+        (-)^{A+B} \Tr \big( A B \big) \Tr \big( C D \big)
+      + (-)^{A+C} \Tr \big( A C \big) \Tr \big( B D \big)
+      + (-)^{A+D} \Tr \big( A D \big) \Tr \big( B C \big)
+    \Big)
   \bigg]
 \end{align}
 where
@@ -230,7 +229,7 @@ Then we can write the difference of the action $\Delta S = S^{\mathrm{new}}
 all matrices and $\deltaA$.
 The first part (involving four matrices $A$) then reads
 \begin{align}
-  \Delta S^{(\RN 1)} (A) &=
+  \Delta S^{(\RN 1)} [A] &=
   2 \, k \, N
   \Big[
       4 \Tr \big( A^3 \deltaA   \big)
@@ -254,7 +253,7 @@ The first part (involving four matrices $A$) then reads
 \end{align}
 In the case the newly generate element is on the diagonal this can be written as
 \begin{align}
-  \Delta S^{(\RN{1})}_{\mathrm{diag}} (A) &=
+  \Delta S^{(\RN{1})}_{\mathrm{diag}} [A] &=
     2 \, k \, N
     \Big[
       4 a \sum_{n,m} A_{in} A_{nm} A_{mi}
@@ -286,7 +285,7 @@ where
 \textit{the second line is identically zero in the case the matrix $A$ is traceless}.
 The off-diagonal case can be written as
 \begin{align}
-  &\Delta S^{(\RN{1})}_{\mathrm{off}} (A) = 2 \, k  \, N
+  &\Delta S^{(\RN{1})}_{\mathrm{off}} [A] = 2 \, k  \, N
   \bigg\{
     8
     \Big[
@@ -323,38 +322,52 @@ The off-diagonal case can be written as
 \end{align}
 In the same spirit we find for the contributions to traces with exactly two matrices $A$
 \begin{align}
-  &\Delta S^{(\RN{2})}_{\mathrm{diag}} (A) =
-  2k \sum_{B \neq A} \bigg\{ 4N \Big[
+  &\Delta S^{(\RN{2})}_{\mathrm{diag}} [A] =
+  2k \sum_{B \neq A}
+  \bigg\{
+    4 \, N
+    \Big[
       2 a \operatorname{Re} \sum_{n,m} A_{in} B_{nm} B_{mi}
-      + a^2 \sum_n |B_{in}|^2
-  \Big]\\
-  &+2 \, \sigma_{AB}\,N   \Big[
+      - a^2 \sum_n |B_{in}|^2
+    \Big]
+  \nonumber \\
+  &+2 \, \sigma_{AB} \, N
+  \Big[
       2 a \sum_{n,m} B_{in} A_{nm} B_{mi}
-      + a^2 c_B^2
-  \Big]\\
-  &+ (8+4\sigma_{AB}) \Big[
-    a \Tr AB^2 + (a\Tr A +a^2) \sum_n |B_{in}|^2 \\
-    &\quad+ (a^2 c_B + 2a \operatorname{Re} \sum_n A_{in} B_{ni} ) \Tr B
-    + (-)^{A+B} (2 a c_B \Tr AB + a^2 c_B^2)
-  \Big] \\
-  &+ (4+2\sigma_{AB})(2ac+a^2) \Tr B^2
+      - a^2 c_B^2
+  \Big]
+  \nonumber \\
+  &+ \big( 8+4\sigma_{AB} \big)
+  \Big[
+    a \Tr AB^2
+    + \big( a \Tr A - a^2 \big) \sum_n |B_{in}|^2
+    \nonumber \\
+    &\quad+ \big( 2a \operatorname{Re} \sum_n A_{in} B_{ni} - a^2 c_B \big) \Tr B
+    + (-)^{A+B} (2 a c_B \Tr AB - a^2 c_B^2)
+  \Big]
+  \nonumber \\
+  &+ (4+2\sigma_{AB})(2ac-a^2) \Tr B^2
  \bigg\}
 \end{align}
 where again the third line is identically zero for the case of a
 traceless matrix $A$. In the off-diagonal case we have
 \begin{align}
-  &\Delta S^{(\RN{2})}_{\mathrm{off}} (A) =
-  2k \sum_{B \neq A} \bigg\{ 4N \Big[
+  &\Delta S^{(\RN{2})}_{\mathrm{off}} [A] =
+  2k \sum_{B \neq A}
+  \bigg\{
+    4 \, N
+    \Big[
       2a \sum_{n,m} \operatorname{Re}
       \left( A_{in} B_{nm} B_{mj} + B_{in} B_{nm} A_{mj} \right)\\
       &\quad+ 2b \sum_{n,m} \operatorname{Im}
       \left( A_{in} B_{nm} B_{mj} + B_{in} B_{nm} A_{mj} \right)\\
-      &\quad+ (a^2 + b^2) \sum_n \Big( |B_{in}|^2 + |B_{jn}|^2 \Big)
-  \Big]\\
+      &\quad- (a^2 + b^2) \sum_n \Big( |B_{in}|^2 + |B_{jn}|^2 \Big)
+    \Big]
+    \nonumber \\
   &+ 2 \,  \sigma_{AB} \, N   \Big[
     4a \sum_{n,m} \operatorname{Re} B_{in} A_{nm} B_{mj}
     +4b \sum_{n,m} \operatorname{Im} B_{in} A_{nm} B_{mj} \\
-    &\quad+
+    &\quad-
     2 \left(
       (a^2-b^2)(c_B^2-d_B^2) + 4abc_B d_B + (a^2+b^2) B_{ii} B_{jj}
     \right)
@@ -364,15 +377,20 @@ traceless matrix $A$. In the off-diagonal case we have
       a \sum_n \operatorname{Re} (B_{in} B_{nj})
       +b \sum_n \operatorname{Im} (B_{in} B_{nj})
           \Big) \\
-    &\quad+ \Tr B \Big(
-      (a^2+b^2)(B_{ii}+B_{jj}) + 2 \Big[
-        a \sum_n \operatorname{Re} (A_{in} B_{nj} + B_{in} A_{nj}) \\
-        &\quad\quad+b \sum_n \operatorname{Im} (A_{in} B_{nj} + B_{in} A_{nj})
-      \Big] \Big) \\
+    &\quad+ \Tr B
+          \Big(
+            2
+            \Big[
+              a \sum_n \operatorname{Re} (A_{in} B_{nj} + B_{in} A_{nj}) \\
+              &\quad\quad+b \sum_n \operatorname{Im} (A_{in} B_{nj} + B_{in} A_{nj})
+            \Big]
+            - (a^2+b^2)(B_{ii}+B_{jj})
+          \Big)
+          \nonumber \\
       &\quad+ (-)^{A+B} \left(
-       4 (ac_B+bd_B) \Tr AB + 4(ac_B+bd_B)^2
+       4 (ac_B+bd_B) \Tr AB - 4(ac_B+bd_B)^2
      \right) \\
-   &\quad+ \Tr B^2 \left( 2(ac+bd)+(a^2+b^2) \right)
+   &\quad+ \Tr B^2 \left( 2(ac+bd)-(a^2+b^2) \right)
   \Big]
  \bigg\}
 \end{align}
@@ -380,7 +398,7 @@ where we defined $c_B \equiv \operatorname{Re} B_{ij}$ and
 $d_B \equiv \operatorname{Im} B_{ij}$.
 Here we also made use of the general expression
 \begin{align}
-  \Tr M \deltaA =
+  \Tr \big( M \deltaA \big) =
   \begin{cases}
     a \operatorname{Re} (M_{ij} + M_{ji})
     +b \operatorname{Im} (M_{ij} - M_{ji}), &\text{off-diagonal}\\
@@ -390,12 +408,12 @@ Here we also made use of the general expression
 which is valid for any matrix $M$ that is a product of hermitian matrices.
 The trace is thus purely real.
 
-Contributions to $\Delta S^{(\RN 3)}(A)$ including exactly one matrix A
+Contributions to $\Delta S^{(\RN 3)}[A]$ including exactly one matrix A
 can then easily be obtained by replacing $A$ with $\deltaA$ in the
 general expression above and using the last relation.
 In particular for $M=BCD$ the off-diagonal case will read
 \begin{align}
-  \Tr \deltaA \,BCD &=
+  \Tr \big( \deltaA \, B \, C \, D \big) &=
     a \sum_{n,m} \operatorname{Re}
     \left( B_{in} C_{nm} D_{mj} + D_{in} C_{nm} B_{mj} \right) \\
     &+ b \sum_{n,m} \operatorname{Im}
@@ -403,7 +421,7 @@ In particular for $M=BCD$ the off-diagonal case will read
 \end{align}
 We then have for the diagonal part
 \begin{align}
-  &\Delta S^{(\RN{3})}_{\mathrm{diag}} (A) =
+  &\Delta S^{(\RN{3})}_{\mathrm{diag}} [A] =
     8k \sum_{\mathclap{B < C < D}}
     \;\;
     \bigg[
@@ -422,7 +440,7 @@ We then have for the diagonal part
 where the term proportial to $\Tr F_1$ is identically zero if $A$ is traceless.
 For the off-diagonal part instead one gets
 \begin{align}
-  &\Delta S^{(\RN{3})}_{\mathrm{off}} (A) =
+  &\Delta S^{(\RN{3})}_{\mathrm{off}} [A] =
     8k \sum_{\mathclap{B < C < D}}
     \;\;
     \bigg[
