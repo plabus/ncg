@@ -4,14 +4,16 @@
 #include "Matrix_Properties.h"
 #define MAX(x, y) (((x) > (y)) ? (x) : (y))
 
+// enum to distinguish even, odd and full Clifford group
+enum Clifford_Type { CLIFFORD_ODD, CLIFFORD_EVEN, CLIFFORD_FULL };
+
+
 void printMint(int *matrix, int n);
 void printMcomplex(float complex *matrix, int n);
-
 
 int factorial(int n);
 int binomial(int a, int b);
 void combination(int* c,int n,int p, int x);
-
 
 void commutator(float complex *A, float complex *B, float complex *C, int k);
 void antisymmetrise(float complex *gammas, int dim, int k, int num_indices, int *sequence, float complex *matrix);
@@ -33,7 +35,7 @@ void Generate_Gammas(
 void Reshuffle_Clifford_Group(
     float complex *big_gammas,
     struct Matrix_Properties const prop,
-    size_t const ODD
+    enum Clifford_Type const group_type
     );
 
 void Generate_Clifford_Group(

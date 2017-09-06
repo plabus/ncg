@@ -387,7 +387,7 @@ void Generate_Gammas(
 void Reshuffle_Clifford_Group(
     float complex *big_gammas,
     struct Matrix_Properties const prop,
-    size_t const ODD
+    enum Clifford_Type const group_type
     )
 {
   /* Order the big gammas in such a way, that the hermitian matrices come first */
@@ -396,7 +396,10 @@ void Reshuffle_Clifford_Group(
   size_t const num_h = prop.num_h;
 
   size_t num = (size_t) pow(2,dim);
-  if(ODD==1) num = (size_t) pow(2,dim-1);
+  if( group_type == CLIFFORD_ODD || group_type == CLIFFORD_EVEN )
+  {
+    num = (size_t) pow(2,dim-1);
+  }
 
   float complex *buffer = (float complex*) malloc(num*k*k*sizeof(float complex));
 
@@ -498,7 +501,7 @@ void Generate_Clifford_Group(
   prop->num_h = *num_h;
   prop->num_l = *num_l;
   prop->num_m = (*num_h) + (*num_l);
-  Reshuffle_Clifford_Group(big_gammas, *prop, 0);
+  Reshuffle_Clifford_Group(big_gammas, *prop, CLIFFORD_FULL);
 
   free(matrix);
   free(sequence);
@@ -557,7 +560,7 @@ void Generate_Clifford_Odd_Group(
   prop->num_h = *num_h;
   prop->num_l = *num_l;
   prop->num_m = (*num_h) + (*num_l);
-  Reshuffle_Clifford_Group(big_gammas, *prop, 1);
+  Reshuffle_Clifford_Group(big_gammas, *prop, CLIFFORD_ODD);
 
   free(matrix);
   free(sequence);
