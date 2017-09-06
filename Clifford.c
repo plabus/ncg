@@ -497,6 +497,7 @@ void Generate_Clifford_Group(
 
   prop->num_h = *num_h;
   prop->num_l = *num_l;
+  prop->num_m = (*num_h) + (*num_l);
   Reshuffle_Clifford_Group(big_gammas, *prop, 0);
 
   free(matrix);
@@ -555,6 +556,7 @@ void Generate_Clifford_Odd_Group(
   // Reshuffle the indices to have all hermitian matrices first
   prop->num_h = *num_h;
   prop->num_l = *num_l;
+  prop->num_m = (*num_h) + (*num_l);
   Reshuffle_Clifford_Group(big_gammas, *prop, 1);
 
   free(matrix);

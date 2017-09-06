@@ -11,6 +11,7 @@ struct Matrix_Properties
   size_t k;
   size_t num_h;
   size_t num_l;
+  size_t num_m;
   double g2;
   double g4;
 };

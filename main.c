@@ -61,6 +61,7 @@ int main()
     .k = (P+Q) % 2 ? (int) pow( 2, ( P + Q - 1 ) / 2 ) : (int) pow( 2, ( P + Q ) / 2 ),
     .num_h = 0,
     .num_l = 0,
+    .num_m = 0,
     .g2 = G2,
     .g4 = G4
   };
@@ -70,16 +71,15 @@ int main()
   size_t const size_gammas = (int) pow( 2, parameters.d - 1 ) * parameters.k * parameters.k;
   float complex *Gamma_Matrices = (float complex *) malloc( size_gammas * sizeof(float complex) );
   Generate_Clifford_Odd_Group(Gamma_Matrices, &parameters);
-  size_t const num_m = parameters.num_h + parameters.num_l;
 
   // Allocate matrix SigmaAB and calulate its values from the Gammas
-  int *SigmaAB = (int*) calloc( num_m * num_m, sizeof(int) );
+  int *SigmaAB = (int*) calloc( parameters.num_m * parameters.num_m, sizeof(int) );
   Calculate_Trace_Gamma_ABAB(Gamma_Matrices, parameters, SigmaAB);
 
   // Allocate matrix sigmaABCD and calulate its values from the Gammas
-  int **SigmaABCD = (int **) malloc( num_m * sizeof(int *) );
+  int **SigmaABCD = (int **) malloc( parameters.num_m * sizeof(int *) );
   // Adjust that size for less memory use and higher dimension d:
-  for( size_t i = 0; i < num_m; ++i )
+  for( size_t i = 0; i < parameters.num_m; ++i )
   {
     SigmaABCD[i] = (int *) malloc(
         7 * parameters.d * parameters.d * parameters.d * parameters.d * sizeof(int)
@@ -89,17 +89,18 @@ int main()
 
   // Melissa O'NEILL's RNG lib seeded with sys time and mem address
   // http://www.pcg-random.org/
-  struct pcg32_random_t rngs[num_m];
-  for(int i=0;i<num_m;++i) {
+  struct pcg32_random_t rngs[parameters.num_m];
+  for( size_t i = 0; i < parameters.num_m; ++i )
+  {
     pcg32_srandom_r(&rngs[i], time(NULL), (intptr_t)&rngs[i]);
   }
 
   // Array allocations
   REAL complex *Matrices;
-  Matrices = (REAL complex *) calloc( num_m * parameters.n * parameters.n, sizeof(REAL complex) );
+  Matrices = (REAL complex *) calloc( parameters.num_m * parameters.n * parameters.n, sizeof(REAL complex) );
 
   // Memory needed for H's and L's, and gamma matrices
-  const int memory = num_m * parameters.n * parameters.n * sizeof(REAL complex)
+  const int memory = parameters.num_m * parameters.n * parameters.n * sizeof(REAL complex)
                    + size_gammas * sizeof(float complex);
 
 /////////////////////////////////////////////////////////////////////
@@ -187,8 +188,8 @@ int main()
       // finally tune the step size according to recent acceptance
       // (Remember, we are counting accepts for each matrix and each step t)
       uint64_t accepted_sweep = accepted - accepted_old;
-      double acc_rate_accum = (double) accepted / ( t * num_m );
-      double acc_rate_sweep = (double) accepted_sweep / ( WRITEOUT_FREQ * num_m );
+      double acc_rate_accum = (double) accepted / ( t * parameters.num_m );
+      double acc_rate_sweep = (double) accepted_sweep / ( WRITEOUT_FREQ * parameters.num_m );
       accepted_old = accepted;
       tune_step_size( acc_rate_sweep, &step_size );
 
@@ -216,7 +217,7 @@ int main()
   }
 
   free(SigmaAB);
-  for( int i = 0; i < num_m; ++i )
+  for( size_t i = 0; i < parameters.num_m; ++i )
   {
     free(SigmaABCD[i]);
   }
