@@ -38,23 +38,23 @@ int main(int argc, char *argv[])
   int rank = 0;
   // int nproc = 0;
 
-  struct arguments arguments = parse_command_line_args(argc, argv);
+  struct arguments args = parse_command_line_args(argc, argv);
 
   // Initialise simulation parameters
   struct Matrix_Properties parameters = {
-    .n = arguments.N,
-    .p = arguments.P,
-    .q = arguments.Q,
-    .d = arguments.P + arguments.Q,
-    .s = ( arguments.Q - arguments.P + 64 ) % 8,
-    .k = (arguments.P+arguments.Q) % 2 ?
-      (int) pow( 2, ( arguments.P + arguments.Q - 1 ) / 2 ) :
-      (int) pow( 2, ( arguments.P + arguments.Q ) / 2 ),
+    .n = args.N,
+    .p = args.P,
+    .q = args.Q,
+    .d = args.P + args.Q,
+    .s = ( args.Q - args.P + 64 ) % 8,
+    .k = ( args.P + args.Q ) % 2 ?
+      (int) pow( 2, ( args.P + args.Q - 1 ) / 2 ) : //  odd case
+      (int) pow( 2, ( args.P + args.Q ) / 2 ),      // even case
     .num_h = 0,
     .num_l = 0,
     .num_m = 0,
-    .g2 = arguments.G2,
-    .g4 = arguments.G4
+    .g2 = args.G2,
+    .g4 = args.G4
   };
 
   // Generate the ODD Clifford Group and number of (anti-)hermitian matrices,
@@ -128,7 +128,7 @@ int main(int argc, char *argv[])
     fprintf(stdout, "  Memory used                      : %.3g MiB\n", memory/1048576.);
     fprintf(stdout, "  Starting sweep                   : %d\n", start_sweep);
     fprintf(stdout, "  Chain elements to be produced    : %zu sweep\n",
-        arguments.chain_length / parameters.n / parameters.n);
+        args.chain_length / parameters.n / parameters.n);
     fprintf(stdout, "  Starting time                    : %s\n\n", buff);
 
     fprintf(stdout, "  Geometry:\n");
@@ -149,7 +149,7 @@ int main(int argc, char *argv[])
     fprintf(stdout, "  GENERATING CHAIN:\n\n");
     fprintf(stdout,
         "  time       chain   sweep   action S \t acceptance (accumulated) \t acceptance (last %zu sweep)\n",
-        arguments.writeout_freq / parameters.n / parameters.n
+        args.writeout_freq / parameters.n / parameters.n
         );
   }
 
@@ -163,13 +163,13 @@ int main(int argc, char *argv[])
   uint64_t accepted_old = 0;   // buffer to calculate accepted steps per sweep
   double step_size      = 0.1; // initial step length
 
-  for( uint64_t t = 0; t < arguments.chain_length; ++t )
+  for( uint64_t t = 0; t < args.chain_length; ++t )
   {
     // Generate new chain element
     Get_Next_MCMC_Element( rngs, Matrices, parameters, SigmaAB, SigmaABCD, &accepted, step_size );
 
     // Print some diagnostics each writeout_freq SWEEPs
-    if( t % arguments.writeout_freq == 0 && t != 0 )
+    if( t % args.writeout_freq == 0 && t != 0 )
     {
       // Get the time of the day (hrs, min, sec) as string
       time_t now = time(0);
@@ -181,7 +181,7 @@ int main(int argc, char *argv[])
       // (Remember, we are counting accepts for each matrix and each step t)
       uint64_t accepted_sweep = accepted - accepted_old;
       double acc_rate_accum = (double) accepted / ( t * parameters.num_m );
-      double acc_rate_sweep = (double) accepted_sweep / ( arguments.writeout_freq * parameters.num_m );
+      double acc_rate_sweep = (double) accepted_sweep / ( args.writeout_freq * parameters.num_m );
       accepted_old = accepted;
       tune_step_size( acc_rate_sweep, &step_size );
 
