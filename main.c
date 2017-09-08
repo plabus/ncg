@@ -7,14 +7,14 @@
 #include <string.h>
 // #include <mpi.h>
 // #include <omp.h>
-#include "IO.h"
 #include "Precision.h"
-#include "Utilities.h"
-#include "Clifford.h"
-#include "Random.h"
-#include "MonteCarlo.h"
-#include "Actions.h"
 #include "Matrix_Properties.h"
+#include "Utilities.h"
+#include "Random.h"
+#include "IO.h"
+#include "Clifford.h"
+#include "Actions.h"
+#include "MonteCarlo.h"
 
 // Double escape in order to print
 // precision REAL as string
@@ -57,6 +57,20 @@ int main(int argc, char *argv[])
     .g4 = args.G4
   };
 
+  // TODO
+  // generate file name from input parameters
+  // need append or create mode, depending whether we "restart" or begin a chain
+  // shall we keep the file open during the whole simulation or open it only when writing?
+  FILE *file_ptr;
+  file_ptr = fopen("configs", "w+");
+  fprintf(file_ptr, "%zu %zu %zu %5.3f %5.3f\n",
+      parameters.n,
+      parameters.p,
+      parameters.q,
+      parameters.g2,
+      parameters.g4
+      );
+
   // Generate the ODD Clifford Group and number of (anti-)hermitian matrices,
   // where hermitian matrices are stored first, anti-hermitian matrices second.
   // Update the struct parameters during the process (num_h, num_l and num_m).
@@ -64,11 +78,11 @@ int main(int argc, char *argv[])
   float complex *Gamma_Matrices = (float complex *) malloc( size_gammas * sizeof(float complex) );
   Generate_Clifford_Odd_Group(Gamma_Matrices, &parameters);
 
-  // Allocate matrix SigmaAB and calulate its values from the Gammas
+  // Allocate matrix SigmaAB and calculate its values from the Gammas
   int *SigmaAB = (int*) calloc( parameters.num_m * parameters.num_m, sizeof(int) );
   Calculate_Trace_Gamma_ABAB(Gamma_Matrices, parameters, SigmaAB);
 
-  // Allocate matrix sigmaABCD and calulate its values from the Gammas
+  // Allocate matrix sigmaABCD and calculate its values from the Gammas
   int **SigmaABCD = (int **) malloc( parameters.num_m * sizeof(int *) );
   // Adjust that size for less memory use and higher dimension d:
   for( size_t i = 0; i < parameters.num_m; ++i )
@@ -185,13 +199,24 @@ int main(int argc, char *argv[])
       accepted_old = accepted;
       tune_step_size( acc_rate_sweep, &step_size );
 
-      // time, rank, sweep, action S, acceptance (accumulated), acceptance (last sweeps)
       action = Calculate_Action( Matrices, parameters, SigmaAB, SigmaABCD );
+
+      // Screen diagnostics from every process
+      // time, rank, sweep, action S, acceptance (accumulated), acceptance (last sweeps)
       fprintf(
           stdout,
           "  %s %3d \t %5lu \t     %.6f \t %4.2f \t %4.2f\n",
           buff, rank+1, t / parameters.n / parameters.n, action, 100.0 * acc_rate_accum, 100.0 * acc_rate_sweep
           );
+
+      // Write sweep and action for your chain to a file
+      fprintf( file_ptr, "%zu %.12f\n",
+          t / parameters.n / parameters.n,
+          action
+          );
+
+      // Write matrices for your chain to a file
+      write_matrices_to_file( Matrices, parameters, file_ptr );
     }
   }
 
@@ -200,6 +225,8 @@ int main(int argc, char *argv[])
 //                       FINALISATION                              //
 //                                                                 //
 /////////////////////////////////////////////////////////////////////
+
+  fclose(file_ptr);
 
   if(rank==0)
   {

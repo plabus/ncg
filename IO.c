@@ -68,3 +68,16 @@ struct arguments parse_command_line_args(
 
   return arguments;
 }
+
+void write_matrices_to_file(
+    REAL complex const *M,               // array of matrices
+    struct Matrix_Properties const prop, // includes num_h, num_l, n and k
+    FILE* file_ptr                       // pointer to file for write to disk
+    )
+{
+  for( size_t index = 0; index < prop.n * prop.n; ++index )
+  {
+    fprintf( file_ptr, "%.16f %.16f ",  creal(M[index]), cimag(M[index]) );
+  }
+  fprintf( file_ptr, "\n" );
+}
