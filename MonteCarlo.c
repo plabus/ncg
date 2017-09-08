@@ -102,18 +102,18 @@ double Matrices_Initialisation(
 
 // Generate a new Monte Carlo candidate by changing one matrix element in one matrix
 struct Matrix_State Generate_Candidate(
-    struct pcg32_random_t *rng,                // pointer to one rng
-    REAL complex *Matrices,                    // array of matrices
-    struct Matrix_Properties const parameters, // includes num_h, num_l, n and k
-    const double step_size,                    // length of each Monte Carlo step
-    const int matrix                           // in which matrix an element should be changed
+    struct pcg32_random_t *rng,          // pointer to one rng
+    REAL complex *Matrices,              // array of matrices
+    struct Matrix_Properties const prop, // includes num_h, num_l, n and k
+    const double step_size,              // length of each Monte Carlo step
+    const int matrix                     // in which matrix an element should be changed
     )
 {
   // Generate position of change and save old element:
   // -------------------------------------------------
 
   // Set the offset to write to the right matrix
-  const int length = parameters.n;
+  const int length = prop.n;
   const int offset = matrix * length * length;
 
   // Calculate two random integers and generate position in upper and lower half
@@ -166,13 +166,13 @@ struct Matrix_State Generate_Candidate(
 
 // Restore the Matrices as they have been before using Generate_Candidate
 void Restore_Matrices(
-    REAL complex *Matrices,                    // array of matrices
-    struct Matrix_Properties const parameters, // includes num_h, num_l, n and k
-    const struct Matrix_State old              // old state
+    REAL complex *Matrices,              // array of matrices
+    struct Matrix_Properties const prop, // includes num_h, num_l, n and k
+    const struct Matrix_State old        // old state
     )
 {
   // Set the offset to write to the right matrix
-  const int length = parameters.n;
+  const int length = prop.n;
   const int offset = old.matrix * length * length;
 
   // Off-diagonal case
@@ -190,26 +190,26 @@ void Restore_Matrices(
 
 // Creates a new Markov chain element
 void Get_Next_MCMC_Element(
-    struct pcg32_random_t *rng,                // array of rng's, one for each matrix
-    REAL complex *Matrices,                    // array of matrices
-    struct Matrix_Properties const parameters, // includes num_h, num_l, n and k
-    int *sigmaAB,                              // pre-calculated Clifford products of 2 Gamma matrices
-    int **sigmaABCD,                           // pre-calculated Clifford products of 4 Gamma matrices
-    uint64_t* accepted,                        // pointer to number of accepted steps
-    const double step_size                     // length of each Monte Carlo step
+    struct pcg32_random_t *rng,          // array of rng's, one for each matrix
+    REAL complex *Matrices,              // array of matrices
+    struct Matrix_Properties const prop, // includes num_h, num_l, n and k
+    int *sigmaAB,                        // pre-calculated Clifford products of 2 Gamma matrices
+    int **sigmaABCD,                     // pre-calculated Clifford products of 4 Gamma matrices
+    uint64_t* accepted,                  // pointer to number of accepted steps
+    const double step_size               // length of each Monte Carlo step
     )
 {
   // For each matrix, separately generate a new candidate,
   // calculate the resulting action and perform a Monte Carlo step
-  for( size_t number_matrix = 0; number_matrix < parameters.num_h + parameters.num_l; ++number_matrix )
+  for( size_t number_matrix = 0; number_matrix < prop.num_m; ++number_matrix )
   {
 
     // Generate new candidate and calculate new action:
     // ------------------------------------------------
 
     const struct Matrix_State old =
-      Generate_Candidate( &rng[number_matrix], Matrices, parameters, step_size, number_matrix );
-    const double delta_action = Calculate_Delta_Action( Matrices, parameters, sigmaAB, sigmaABCD, old );
+      Generate_Candidate( &rng[number_matrix], Matrices, prop, step_size, number_matrix );
+    const double delta_action = Calculate_Delta_Action( Matrices, prop, sigmaAB, sigmaABCD, old );
 
 
     // Monte Carlo move decision:
@@ -225,7 +225,7 @@ void Get_Next_MCMC_Element(
     // reject
     else
     {
-      Restore_Matrices( Matrices, parameters, old );
+      Restore_Matrices( Matrices, prop, old );
     }
 
   }
