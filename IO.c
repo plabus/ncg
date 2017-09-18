@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include <stdlib.h>
 #include "IO.h"
 
@@ -61,10 +62,15 @@ struct arguments parse_command_line_args(
   arguments.number_chains = 1;
   arguments.chain_length = 100;
   arguments.writeout_freq = 1;
+  arguments.tune_freq = 1;
 
+  // Parse the command line arguments form the user
   argp_parse(&argp, argc, argv, 0, 0, &arguments);
-  arguments.chain_length  *= arguments.N * arguments.N;
+
+  // Write out and tune frequencies,
+  // should be given in units of sweep = N^2
   arguments.writeout_freq *= arguments.N * arguments.N;
+  arguments.tune_freq *= arguments.N * arguments.N;
 
   return arguments;
 }
@@ -75,9 +81,11 @@ void write_matrices_to_file(
     FILE* file_ptr                       // pointer to file for write to disk
     )
 {
-  for( size_t index = 0; index < prop.n * prop.n; ++index )
-  {
-    fprintf( file_ptr, "%.16f %.16f ",  creal(M[index]), cimag(M[index]) );
-  }
-  fprintf( file_ptr, "\n" );
+  // for( size_t index = 0; index < prop.n * prop.n; ++index )
+  // {
+  //   fprintf( file_ptr, "%.16f %.16f ",  creal(M[index]), cimag(M[index]) );
+  // }
+  // fprintf( file_ptr, "\n" );
+
+  fwrite( M, sizeof(REAL complex), prop.n * prop.n, file_ptr );
 }

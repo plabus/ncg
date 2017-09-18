@@ -16,6 +16,7 @@ struct arguments
   size_t chain_length;
   size_t number_chains;
   size_t writeout_freq;
+  size_t tune_freq;
 };
 
 struct arguments parse_command_line_args(

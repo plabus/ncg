@@ -1,9 +1,9 @@
-# CC=mpicc
-# C_FLAGS= -Wall -pedantic -std=c99 -O2 -fopenmp
-# LIBRARY= -lpthread -lm -fopenmp
-CC=clang
-C_FLAGS= -Wall -pedantic -std=c99 -O0 -g
-LIBRARY= -lpthread -lm
+CC=mpicc
+C_FLAGS= -Wall -pedantic -std=c99 -O2 -fopenmp
+LIBRARY= -lpthread -lm -fopenmp
+# CC=clang
+# C_FLAGS= -Wall -pedantic -std=c99 -O3 -g
+# LIBRARY= -lpthread -lm
 
 
 .PHONY: all
@@ -14,6 +14,9 @@ ncg: IO.o Utilities.o Clifford.o Random.o Actions.o MonteCarlo.o main.o
 
 %.o: %.c
 	${CC} -c $(C_FLAGS) $< -o $@
+
+remove_cfgs:
+	rm -f *.cfg
 
 clean:
 	rm -f *.o
